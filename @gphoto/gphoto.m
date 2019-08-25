@@ -69,13 +69,82 @@ classdef gphoto < handle
   %
   %  - Matlab, no external toolbox
   %  - A USB connection
-  %  - A DSLR Camera suported by gPhoto
+  %  - A DSLR Camera supported by gPhoto
   %  - GPhoto2 (for usb connection). Get it at http://gphoto.org
   %
   %  Just copy the files and go into the directory. Then type commands above, once the
   %  camera is configured (see above).
   %
   % (c) E. Farhi, GPL2, 2019.
+  
+  % api from man:gphoto2 commands are 'gphoto2 ...'
+  % gphoto2 --abilities
+  % gphoto2 --version
+  % gphoto2 --auto-detect
+  % gphoto2 --port <port> e.g. ptpip: usb:XX,YY
+  % gphoto2 --filename (output file)
+  % gphoto2 --folder
+  % gphoto2 --list-folders
+  % gphoto2 --list-files
+  % gphoto2 --capture-preview
+  % gphoto2 --bulb SEC
+  % --capture-image-and-download (only on computer)
+  % --capture-movie=TIMEs (e.g. 10s)
+  % --keep (also keep on camera)
+  % --keep-raw (keep raw on camera)
+  % --capture-movie (should stream into Matlab figure ?)
+  % --list-config 3s
+  % --list-all-config 3s
+  % --get-config CONFIGENTRY  3s
+  % --set-config CONFIGENTRY=CONFIGVALUE
+  % --set-config-index CONFIGENTRY=CONFIGVALUE_CHOICEINDEX
+  % --reset
+  % --storage-info 0.1s
+  % --sumary (camera info) 0.1 s
+  %
+  % capture-movie: 
+  %   gphoto2 --capture-movie --stdout | ffmpeg -i pipe:0 http://localhost:8080/feed1.ffm
+  %
+  % mplayer -demuxer mpegts 'ffmpeg://tcp://127.0.0.1:5001?listen'
+  % gphoto2 --capture-movie --stdout | ffmpeg -f mjpeg -i pipe:0 -r 20 -vcodec libx264 -pix_fmt yuv420p -tune zerolatency -preset ultrafast -f mpegts "tcp://127.0.0.1:5001"
+  
+  % actions are slow...
+  
+  % much faster: https://github.com/alexdu/piggyphoto
+  % C = piggyphoto.camera()
+  % print C.abilities
+  % C.capture_preview('preview.jpg')
+  % C.capture_image('image.jpg')
+  %
+  % 'abilities',
+  % 'about',
+  % 'capture_image',
+  % 'capture_preview',
+  % 'config',
+  % 'download_file',
+  % 'exit',
+  % 'init',
+  % 'initialized',
+  % 'leave_locked',
+  % 'list_config',
+  % 'list_files',
+  % 'list_folders',
+  % 'manual',
+  % 'port_info',
+  % 'ptp_canon_eos_requestdevicepropvalue',
+  % 'ref',
+  % 'reinit',
+  % 'summary',
+  % 'trigger_capture',
+  % 'unref',
+  % 'wait_for_event']
+
+
+  % camera: connect
+  % capture
+  % get_preview
+  % list_files
+  % list_files
 
   properties
     url           = 'http://192.168.122.1:8080';
