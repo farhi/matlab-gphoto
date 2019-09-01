@@ -78,73 +78,41 @@ classdef gphoto < handle
   % (c) E. Farhi, GPL2, 2019.
   
   % api from man:gphoto2 commands are 'gphoto2 ...'
-  % gphoto2 --abilities
-  % gphoto2 --version
-  % gphoto2 --auto-detect
-  % gphoto2 --port <port> e.g. ptpip: usb:XX,YY
-  % gphoto2 --filename (output file)
-  % gphoto2 --folder
-  % gphoto2 --list-folders
-  % gphoto2 --list-files
-  % gphoto2 --capture-preview
-  % gphoto2 --bulb SEC
-  % --capture-image-and-download (only on computer)
-  % --capture-movie=TIMEs (e.g. 10s)
-  % --keep (also keep on camera)
-  % --keep-raw (keep raw on camera)
-  % --capture-movie (should stream into Matlab figure ?)
-  % --list-config 3s
-  % --list-all-config 3s
-  % --get-config CONFIGENTRY  3s
-  % --set-config CONFIGENTRY=CONFIGVALUE
-  % --set-config-index CONFIGENTRY=CONFIGVALUE_CHOICEINDEX
-  % --reset
-  % --storage-info 0.1s
-  % --sumary (camera info) 0.1 s
+  % use gphoto2 in shell mode with stdin/out capture. Use Process to communicate asynchronously. 
   %
-  % capture-movie: 
-  %   gphoto2 --capture-movie --stdout | ffmpeg -i pipe:0 http://localhost:8080/feed1.ffm
+  % gphoto2 --shell
+  %  capture-image
+  %   Captures a single image and keeps it on the camera.
+  %  capture-image-and-download
+  %   Captures a single image and downloads it from the camera.
+  %  capture-preview
+  %   Captures a preview image and downloads it from the camera.
+  %  list-config
+  %   Lists all configuration values.
+  %  get-config NAME
+  %   Gets the configuration specified by “NAME”.
+  %  set-config NAME=VALUE
+  %   Sets the configuration specified by “NAME” to “VALUE”.
+  %  set-config-value NAME=VALUE
+  %   Sets the configuration specified by “NAME” to “VALUE”.
+  %  set-config-index NAME=VALUE
+  %   Sets the configuration specified by “NAME” to the “INDEX” into the
+  %   list of choices. Works only for Menu or Radio button entries.
+  %  exit, quit, q
+  %   Exit the gphoto2 shell.
   %
-  % mplayer -demuxer mpegts 'ffmpeg://tcp://127.0.0.1:5001?listen'
-  % gphoto2 --capture-movie --stdout | ffmpeg -f mjpeg -i pipe:0 -r 20 -vcodec libx264 -pix_fmt yuv420p -tune zerolatency -preset ultrafast -f mpegts "tcp://127.0.0.1:5001"
-  
-  % actions are slow...
-  
-  % much faster: https://github.com/alexdu/piggyphoto
-  % C = piggyphoto.camera()
-  % print C.abilities
-  % C.capture_preview('preview.jpg')
-  % C.capture_image('image.jpg')
-  %
-  % 'abilities',
-  % 'about',
-  % 'capture_image',
-  % 'capture_preview',
-  % 'config',
-  % 'download_file',
-  % 'exit',
-  % 'init',
-  % 'initialized',
-  % 'leave_locked',
-  % 'list_config',
-  % 'list_files',
-  % 'list_folders',
-  % 'manual',
-  % 'port_info',
-  % 'ptp_canon_eos_requestdevicepropvalue',
-  % 'ref',
-  % 'reinit',
-  % 'summary',
-  % 'trigger_capture',
-  % 'unref',
-  % 'wait_for_event']
-
-
-  % camera: connect
-  % capture
-  % get_preview
-  % list_files
-  % list_files
+  % gphoto2 not in shell mode is slower, but allows in addition:
+  % --auto-detect
+  % --list-ports
+  % --list-config
+  % --list-all-config
+  % --capture-preview
+  % --show-preview (ascii)
+  % --capture-image
+  % --capture-movie
+  % --storage-info
+  % --summary
+  % --capture-preview
 
   properties
     url           = 'http://192.168.122.1:8080';
@@ -202,7 +170,7 @@ classdef gphoto < handle
   end
   
   methods
-    function self = gphoto(url)
+    function self = gphoto
       % GPHOTO initialize the remote control for Sony Alpha Camera
       %   The camera is accessbile through JSON messages at URL 
       %   http://192.168.122.1:8080/sony/camera
@@ -212,15 +180,10 @@ classdef gphoto < handle
       %
       %   s = SONYALPHA('http://IP:8080') starts the camera remote control with 
       %   given IP and port.
-      if nargin == 1
-        self.url = 'usb';
-      end
-      
-      if any(strcmp(self.url, {'gphoto2','gphoto', 'usb'}))
-        self.url    = 'gphoto2';
-        self.period = 20.0;
-        self.liveview = false;
-      end
+
+      self.url    = 'gphoto2';
+      self.period = 20.0;
+      self.liveview = false;
       
       try
         self.version = self.api('getApplicationInfo');
@@ -268,12 +231,10 @@ classdef gphoto < handle
     end % gphoto
     
     % main communication method (low-level)
-    function message = curl(self, post, target)
+    function message = curl(self, post)
       % CURL prepare curl command
       %   result = CURL(s, post) sends the JSON message post to the camera.
       %   the result is a struct or JSON string.
-      
-      if nargin < 3, target = 'camera'; end
       
       cmd = post;
       [ret, message, self] = api_gphoto2(self, post);
@@ -428,18 +389,13 @@ classdef gphoto < handle
     
     % generic API call ---------------------------------------------------------
     
-    function ret = api(self, method, value, service)
+    function ret = api(self, method, value)
       % API calls the camera API with method.
       %   API('method') call the given API method call (without argument), e.g. 
       %   for getting settings and simple actions.
       %
       %   API('method', param) call the given API method call (with argument), e.g.
       %   to set the method values.
-      %
-      %   API(..., service) call the given API method call, for the API service.
-      %   Default is service='camera'. Other choice is 'avContent'.
-      if nargin < 4, service=''; end
-      if isempty(service), service='camera'; end
       if nargin < 3 || isempty(value)
         json = [ '{"method": "' method '","params": [],"id": 1,"version": "1.0"}' ];
       else
@@ -451,7 +407,7 @@ classdef gphoto < handle
         json = [ '{"method": "' method '","params": [' value '],"id": 1,"version": "1.0"}' ];
       end
       
-      ret  = curl(self, json, service);
+      ret  = curl(self, json);
     end % api
     
     % usual object life handling -----------------------------------------------
@@ -578,62 +534,38 @@ classdef gphoto < handle
       im=[]; info=[];
       url = self.urlread(varargin{:});
       if isempty(url), return; end % BUSY
-      
-      if any(strcmp(self.url, {'gphoto2','gphoto', 'usb'}))
-        % for gphoto, we just read the images and return
-        im = {}; url = cellstr(url); info={};
-        for index=1:size(url, 1)
-          disp(url{index})
-          try
-            info{end+1} = imfinfo(url{index});
-            info{end}.url = url{index};
-          catch
-            info{end+1} =  [];
-          end
-          try
-            im{end+1}   = imread(url{index});
-          catch
-            im{end+1}   = [];
-          end
+
+      % for gphoto, we just read the images and return
+      im = {}; url = cellstr(url); info={};
+      for index=1:size(url, 1)
+        disp(url{index})
+        try
+          info{end+1} = imfinfo(url{index});
+          info{end}.url = url{index};
+        catch
+          info{end+1} =  [];
         end
-        self.lastImage    = im{end};
-        self.lastImageURL = url{end};
-        self.lastImageDate= now;
-        % image has already been saved locally by gphoto2
-        % copy to an other specified location ?
-        [p,f,ext] = fileparts(url{end});
-        if ~isempty(filename) && isdir(filename) && ~strcmp(p, filename)
-          copyfile(url{end}, fullfile(filename, [f ext]));
-        elseif ~isempty(filename)
-          % check extension
-          [p,f,E] = fileparts(filename);
-          if isempty(E), filename = [ filename ext ]; end
-          copyfile(url{end}, filename);
+        try
+          im{end+1}   = imread(url{index});
+        catch
+          im{end+1}   = [];
         end
-      else % wifi API: download images
-        if ~isempty(url) && ~ischar(url)
-          disp(url)
-          return
-        end
-        [p, f, ext] = fileparts(url);
-          
-        if isempty(filename)
-          filename = fullfile(tempdir, [ f ext ]); % saves locally using the distant image name
-        elseif isdir(filename)
-          filename = fullfile(filename, [ f ext ]);
-        else
-          % check extension
-          [p,f,E] = fileparts(filename);
-          if isempty(E), filename = [ filename ext ]; end
-        end
-        % then get URL and display it
-        im   = urlwrite(url, filename);
-        info = imfinfo(filename); % contains actual local image FileName
-        info.url = url; % distant location
-        self.lastImage    = im;
-        self.lastImageURL = url;
-        self.lastImageDate= now;
       end
+      self.lastImage    = im{end};
+      self.lastImageURL = url{end};
+      self.lastImageDate= now;
+      % image has already been saved locally by gphoto2
+      % copy to an other specified location ?
+      [p,f,ext] = fileparts(url{end});
+      if ~isempty(filename) && isdir(filename) && ~strcmp(p, filename)
+        copyfile(url{end}, fullfile(filename, [f ext]));
+      elseif ~isempty(filename)
+        % check extension
+        [p,f,E] = fileparts(filename);
+        if isempty(E), filename = [ filename ext ]; end
+        copyfile(url{end}, filename);
+      end
+
       % save the LiveView.jpg image to show in the plot window
       if ~isempty(self.lastImage)
         if ischar(self.lastImage) && exist(self.lastImage)
@@ -688,15 +620,10 @@ classdef gphoto < handle
       %   The final RGB image is stored in s.lastImage, and its URL in s.lastImageURL
       %   This syntax is only available in WIFI mode.
       im = []; exif = [];
-      if any(strcmp(self.url, {'gphoto2','gphoto', 'usb'}))
-        [im, exif] = imread(self);
-        url = self.lastImageURL;
-      else % WIFI -> asynchronous capture
-        if strcmp(self.cameraStatus, 'IDLE')
-          [url,im, exif] = urlwrite(self, '', varargin{:}); % new picture when IDLE
-        else url = [];
-        end
-      end
+      
+      [im, exif] = imread(self);
+      url = self.lastImageURL;
+
       if isempty(url) || isempty(im), return; end % BUSY
       if ischar(im) && ~isempty(dir(im)), im = imread(im); end
       fig        = plot_window(self);
@@ -733,21 +660,19 @@ classdef gphoto < handle
         % get the livestream URL e.g. 
         %   http://192.168.122.1:8080/liveview/liveviewstream
         url = self.api('startLiveview');
-        if ~any(strcmp(self.url, {'gphoto2','gphoto', 'usb'}))
-          if ischar(url) && ~isempty(self.ffmpeg)
-            cmd = [ self.ffmpeg ' -ss 1 -i ' url ' -frames:v 1 ' filename ];
-            if strcmp(self.updateTimer.Running,'on')
-              if ispc
-                cmd = [ 'start /b ' cmd ];
-              else
-                cmd = [ cmd '&' ];
-              end
+        if ischar(url) && ~isempty(self.ffmpeg)
+          cmd = [ self.ffmpeg ' -ss 1 -i ' url ' -frames:v 1 ' filename ];
+          if strcmp(self.updateTimer.Running,'on')
+            if ispc
+              cmd = [ 'start /b ' cmd ];
+            else
+              cmd = [ cmd '&' ];
             end
-            
-            [ret, message] = system(cmd);
-            self.api('stopLiveView');
-          else return
           end
+          
+          [ret, message] = system(cmd);
+          self.api('stopLiveView');
+        else return
         end
       end
       
