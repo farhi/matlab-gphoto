@@ -8,6 +8,10 @@ classdef gphoto < handle
     status        = 'INIT';
     UserData      = [];
     lastImageFile = '';
+    lastImageRGB  = [];
+    lastImageDate = '';
+    lastPreviewRGB= [];
+    lastPreviewDate='';
   end % properties
   
   properties (Access=private)
@@ -45,7 +49,7 @@ classdef gphoto < handle
       if isempty(self.proc) || ~isvalid(self.proc)
         % we start the gphoto shell which is reactive and allows background
         % set, get, capture.
-        self.proc = process([ gphoto_executable ' --shell --force-overwrite' ]);
+        self.proc = process([ self.executable ' --shell --force-overwrite' ]);
         silent(self.proc);
         period(self.proc, 1); % auto update period for stdout/err/in
         
@@ -74,17 +78,25 @@ classdef gphoto < handle
       %   GET(self, config) update the specified configuration from the camera.
       if ~strcmp(self.status,'IDLE'), return; end
       if nargin == 1, config = ''; end
-      if ~ischar(config), value = []; return; end
+      if ~ischar(config), return; end
       
       if isempty(config) || strcmp(config, 'all')
-        value = self.settings;
+        f = fieldnames(self.settings);
+        for index=1:numel(f)
+          if isfield(self.settings.(f{index}),'Current')
+            disp([ '  ' f{index} ': ' ...
+              num2str(self.settings.(f{index}).Current) ])
+          else
+            disp([ '  ' f{index} ]);
+          end
+        end
       elseif isfield(self.settings, config)
         % we clear the stdout from the process (to get only what is new)
         self.proc.stdout = '';
         % update value from the camera
         write(self.proc, sprintf('get-config %s\n', config));
         % register expect action as post_get (to get the value when ready)
-        self.expect{end+1} = {'post_get', config};
+        self.expect{end+1} = {'post_get', self, config};
       end
     end % get
     
@@ -92,9 +104,28 @@ classdef gphoto < handle
       % SET set a configuration value
       %   SET(self, config, value) sets config=value on the camera
       if ~strcmp(self.status,'IDLE'), return; end
-      if nargin < 3, return; end
+      if nargin < 3
+        f = fieldnames(self.settings);
+        for index=1:numel(f)
+          if isfield(self.settings.(f{index}), 'Readonly') ...
+            && ~self.settings.(f{index}).Readonly
+            if isfield(self.settings.(f{index}),'Current')
+              disp([ '  ' f{index} ': ' ...
+                num2str(self.settings.(f{index}).Current) ])
+            else
+              disp([ '  ' f{index} ]);
+            end
+          end
+        end
+        return; 
+      end
       if ~ischar(config), return; end
       if ~isfield(self.settings, config), return; end
+      if isfield(self.settings.config, 'Readonly') ...
+        &&  self.settings.config.Readonly
+        disp([ mfilename ': set: property ' config ' is Readonly.' ])
+        return
+      end
       
       % we clear the stdout from the process (to get only what is new)
       self.proc.stdout = '';
@@ -113,14 +144,14 @@ classdef gphoto < handle
       self.proc.stdout = '';
       write(self.proc, sprintf('capture-image-and-download\n'));
       % register a post_image (to get image names)
-      self.expect{end+1} = {'post_image'};
+      self.expect{end+1} = {'post_image', self};
     end % image
     
     function preview(self)
       % PREVIEW capture a preview (small) image with current camera settings
       
       if ~strcmp(self.status,'IDLE'), return; end
-      if ~isempty(dir(fullfile(pwd,'capture-preview.png'))
+      if ~isempty(dir(fullfile(pwd,'capture-preview.png')))
         delete(fullfile(pwd,'capture-preview.png'));
       end
       % we clear the stdout from the process (to get only what is new)
@@ -129,7 +160,7 @@ classdef gphoto < handle
       % the capture filename is 'capture_preview.jpg'. Just need to wait for it.
       % the plot window will automatically update its content with the last image 
       % or preview file.
-      self.expect{end+1} = {'post_preview'};
+      self.expect{end+1} = {'post_preview', self};
     end % image
     
     function st = ishold(self)
@@ -137,7 +168,7 @@ classdef gphoto < handle
       %   st = ISHOLD(s) returns 1 when the camera is BUSY.
       
       % the last line of the shell prompt starts with 'gphoto2:' and ends with '> '
-      lines = strread(self.stdout,'%s','delimiter','\n\r');
+      lines = strread(self.proc.stdout,'%s','delimiter','\n\r');
       lines = lines{end};
       if strncmp(lines, 'gphoto2:',8) && lines(end-1) == '>' && isspace(lines(end))
         self.status = 'IDLE'; st = 0;
@@ -153,8 +184,15 @@ end % gphoto class
 % ------------------------------------------------------------------------------
 function CameraWatchFcn(self)
   % CameraWatchFcn callnback attached to the proc timer
-  if strcmp(ishold(self),'IDLE')
+  if ~ishold(self) % 'IDLE'
     % when an action has been registered, we execute it
+    for index=1:numel(self.expect)
+      this = self.expect{index};
+      feval(this{:}); % expand callback for action
+    end
+    % clear action callbacks
+    self.expect = {};
+      
   end
 end % end
 
@@ -162,8 +200,15 @@ function post_get(self, config)
   % POST_GET executed when a get is registered and camera becomes idle
   
   % update the settings
-  value = gphoto_parse_output(read(self.proc)); % immediately read result and parse it
+  message = read(self.proc);
+  value = gphoto_parse_output(self, message, config); % read result and parse it
+  if isstruct(value) && numel(fieldnames(value)) == 1
+    value = struct2cell(value);
+    value = value{1};
+  end
   self.settings.(config) = value;
+  disp([ mfilename ': ' config ]);
+  disp(value);
   
 end % post_get
 
