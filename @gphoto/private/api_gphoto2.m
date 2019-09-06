@@ -19,11 +19,11 @@ function [ret, message, self] = api_gphoto2(self, post, target)
   switch json.method
 
   case 'getApplicationInfo'
-    gphoto_config1 = gphoto2_getconfig(exe, 'deviceversion');
-    gphoto_config2 = gphoto2_getconfig(exe, 'cameramodel');
-    message = sprintf('%s %i', ...
+    gphoto_config1 = gphoto2_getconfig(exe, 'deviceversion')
+    gphoto_config2 = gphoto2_getconfig(exe, 'cameramodel')
+    message = sprintf('%s %s', ...
       gphoto_config2.cameramodel.Current, ...
-      gphoto_config1.deviceversion.Current);
+      num2str(gphoto_config1.deviceversion.Current));
     
   case 'getEvent'
     % store current settings into object properties
@@ -69,27 +69,27 @@ function [ret, message, self] = api_gphoto2(self, post, target)
     message = gphoto2_setconfig(exe, 'iso', json.params, self.available.iso);
         
   case 'getExposureMode'                            % PASM
-    gphoto_config= gphoto2_getconfig(exe, 'expprogram');
+    gphoto_config= gphoto2_getconfig(exe, 'expprogram');  % Canon: autoexposuremode
     message = gphoto_config.expprogram.Current;
         
   case 'getSupportedExposureMode'
-    gphoto_config= gphoto2_getconfig(exe, 'expprogram');
+    gphoto_config= gphoto2_getconfig(exe, 'expprogram');  % Canon: autoexposuremode
     message = gphoto_config.expprogram.Choice;
         
   case 'setExposureMode'
     % --set-config exposurecompensation=id
-    message = gphoto2_setconfig(exe, 'expprogram', json.params, self.available.mode);
+    message = gphoto2_setconfig(exe, 'expprogram', json.params, self.available.mode); % Canon: autoexposuremode
         
   case 'getSelfTimer'                               % Timer etc
-    gphoto_config= gphoto2_getconfig(exe, 'capturemode');
+    gphoto_config= gphoto2_getconfig(exe, 'capturemode'); % Canon: drivemode
     message = gphoto_config.capturemode.Current;
         
   case 'getSupportedSelfTimer'
-    gphoto_config= gphoto2_getconfig(exe, 'capturemode');
+    gphoto_config= gphoto2_getconfig(exe, 'capturemode'); % Canon: drivemode
     message = gphoto_config.capturemode.Choice;
         
   case 'setSelfTimer'
-    % --set-config capturemode=ID
+    % --set-config capturemode=ID Canon: drivemode
     message = gphoto2_setconfig(exe, 'capturemode', json.params, self.available.timer);
         
   case 'getShutterSpeed'                            % shutter speed
@@ -104,12 +104,12 @@ function [ret, message, self] = api_gphoto2(self, post, target)
     % --set-config shutterspeed=ID
     message = gphoto2_setconfig(exe, 'shutterspeed', json.params, []);
         
-  case 'getFNumber'                                 % F value
+  case 'getFNumber'                                 % F value Canon: aperture
     gphoto_config= gphoto2_getconfig(exe, 'f-number');
     message = gphoto_config.f0x2Dnumber.Current;
         
   case 'getSupportedFNumber'
-    gphoto_config= gphoto2_getconfig(exe, 'f-number');
+    gphoto_config= gphoto2_getconfig(exe, 'f-number');  % Canon: aperture
     message = []; % gphoto_config.f0x2Dnumber.Bottom : Top
         
   case 'setFNumber' 
@@ -147,11 +147,11 @@ function [ret, message, self] = api_gphoto2(self, post, target)
     disp([ mfilename ': unsupported feature: ' json.method ])
   
   case 'getStillQuality'                               % Image Quality (RAW, JPEG)
-    gphoto_config= gphoto2_getconfig(exe, 'imagequality');
+    gphoto_config= gphoto2_getconfig(exe, 'imagequality'); % Canon: None
     message = gphoto_config.imagequality.Current;
         
   case 'getSupportedStillQuality'
-    gphoto_config= gphoto2_getconfig(exe, 'imagequality');
+    gphoto_config= gphoto2_getconfig(exe, 'imagequality');  % Canon: None
     message = gphoto_config.imagequality.Choice;
         
   case 'setStillQuality'
@@ -163,64 +163,7 @@ function [ret, message, self] = api_gphoto2(self, post, target)
 end % api_gphoto2
         
 % ------------------------------------------------------------------------------
-function gphoto_config = gphoto2_getconfig(exe, config)
-% gphoto2_getconfig: get the camera configuration
 
-  % required to avoid Matlab to use its own libraries
-  if ismac,      precmd = 'DYLD_LIBRARY_PATH= ; DISPLAY= ; ';
-  elseif isunix, precmd = 'LD_LIBRARY_PATH= ;  DISPLAY= ; '; 
-  else           precmd = ''; end
-  
-  if nargin < 2, config = []; end
-  if ~isempty(config)
-    cmd = [ precmd exe ' -q ' ]; 
-    % handle multiple config
-    if ~iscell(config), config = cellstr(config); end
-    for index=1:numel(config)
-      cmd = [ cmd ' --get-config ' config{index} ];
-    end
-  else
-    cmd = [ precmd exe  ' --list-all-config -q' ];
-  end
-  
-  [ret, message] = system(cmd);
-  if ret ~= 0
-    disp(cmd)
-    disp(message)
-    error('GPhoto is not available, or camera is not connected.');
-  end
-
-  % now we split with '/main' entries
-  t = textscan(message, '%s','Delimiter','\n'); % into lines
-  t = t{1};
-  main = find(strncmp(t, '/main', 5));
-  if isempty(main), main = 1; end
-  gphoto_config = struct();
-  
-  % analyse result
-  for index=1:numel(main)
-    % extract the block
-    block_start = main(index);
-    if index==numel(main)
-      block_end = numel(t);
-    else
-      block_end = main(index+1);
-    end
-    
-    % block name
-    if ~isempty(config), n = config{index};
-    else
-      n  = t{block_start};
-      [r,n] = fileparts(n); n(~isstrprop(n, 'alphanum')) = '_';
-    end
-    if ~isvarname(n), n= genvarname(n); end
-    name = n;
-    % block fields
-    block = t(block_start:block_end);
-    block = str2struct(block);
-    gphoto_config.(name) = block;
-  end
-end % gphoto2_getconfig
 
 % ------------------------------------------------------------------------------
 function message = gphoto2_setconfig(exe, config, value, choices)
