@@ -215,10 +215,14 @@ end % post_get
 function post_image(self)
   % POST_IMAGE executed when a capture is registered and camera becomes idle
   % images have been written
-  
+  disp([ mfilename ': image' ]);
+  message = read(self.proc);
+  disp(message)
 end % post_image
 
 function post_preview(self)
   % POST_PRVEIEW executed when a preview is registered and camera becomes idle
-  
+  disp([ mfilename ': preview' ]);
+  message = read(self.proc);
+  disp(message)
 end % post_preview
