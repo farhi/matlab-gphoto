@@ -1,7 +1,9 @@
 function gphoto_config = gphoto_parse_output(self, message, config)
-  % gphoto_parse_output split with '/main' entries
+  % gphoto_parse_output split with '/main' and END entries
+  gphoto_config = {};
   
   % checks for message type and config (if any)
+  if isempty(message), return; end
   if ischar(message)
     t = textscan(message, '%s','Delimiter','\n'); % into lines
     t = t{1};
@@ -9,6 +11,11 @@ function gphoto_config = gphoto_parse_output(self, message, config)
     t = message;
   else
     error([ mfilename ': message is ' class(message) ' should be char or cellstr.' ])
+  end
+  % check if this is a capture message
+  if strncmp(t{1}, 'capture-', 8)
+    gphoto_config = gphoto_parse_capture(self, t);
+    return
   end
   if nargin > 2
     if ischar(config)
@@ -23,7 +30,6 @@ function gphoto_config = gphoto_parse_output(self, message, config)
   if isempty(main)
     main = [ 1 (find(strncmp(t, 'END', 5))-1) ];
   end
-  gphoto_config = {};
   
   % analyse result
   for index=1:numel(main)
@@ -61,5 +67,20 @@ function gphoto_config = gphoto_parse_output(self, message, config)
   if numel(gphoto_config) == numel(config)
     gphoto_config = cell2struct(gphoto_config, config, 2);
   end
-  % ----------------------------------------------------------------------------
- 
+
+% ----------------------------------------------------------------------------
+function files = gphoto_parse_capture(self, t)
+  %  gphoto_parse_capture get the captured image file names
+  
+  files = {};
+  % the file names appear at the end of the lines
+  for index=2:numel(t)
+    % split into words
+    w = textscan(t{index}, '%s', 'Delimiter', ' ');
+    w = w{1};
+    w = w(find(~cellfun(@isempty, w)));
+    if ~isempty(dir(fullfile(self.dir, w{end})))
+      files{end+1} = w{end};
+    end
+  end
+    
