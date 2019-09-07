@@ -12,11 +12,12 @@ classdef gphoto < handle
     lastImageDate = '';
     lastPreviewRGB= [];
     lastPreviewDate='';
+    proc          = [];
   end % properties
   
   properties (Access=private)
     executable    = [];
-    proc          = [];
+    
     expect        = {};
   end % properties
   
@@ -80,7 +81,11 @@ classdef gphoto < handle
       if nargin == 1, config = ''; end
       if ~ischar(config), return; end
       
-      if isempty(config) || strcmp(config, 'all')
+      if strcmp(config, 'all')
+        stop(self);
+        self.settings = gphoto_getconfig_all(self);
+        start(self);
+      elseif isempty(config)
         f = fieldnames(self.settings);
         for index=1:numel(f)
           if isfield(self.settings.(f{index}),'Current')
@@ -121,8 +126,8 @@ classdef gphoto < handle
       end
       if ~ischar(config), return; end
       if ~isfield(self.settings, config), return; end
-      if isfield(self.settings.config, 'Readonly') ...
-        &&  self.settings.config.Readonly
+      if isfield(self.settings.(config), 'Readonly') ...
+        &&  self.settings.(config).Readonly
         disp([ mfilename ': set: property ' config ' is Readonly.' ])
         return
       end
