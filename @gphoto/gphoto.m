@@ -18,33 +18,34 @@ classdef gphoto < handle
   %
   % Methods
   % =======
-  % - cd change or get current directory where images are stored. 
-  % - delete close the Gphoto connection
-  % - get get the camera configuration 
-  % - image capture an image with current camera settings 
-  % - ishold get the camera status (IDLE, BUSY) 
+  % - cd      change or get current directory where images are stored. 
+  % - delete  close the Gphoto connection
+  % - get     get the camera configuration 
+  % - image   capture an image with current camera settings 
+  % - ishold  get the camera status (IDLE, BUSY) 
   % - preview capture a preview (small) image with current camera settings 
-  % - set set a configuration value
-  % - start start the background gphoto control
-  % - stop stop the background gphoto control. Restart it with start.
+  % - set     set a configuration value
+  % - start   start the background gphoto control
+  % - stop    stop the background gphoto control. Restart it with start.
   %
   % (c) E. Farhi, GPL2, 2019.
 
   properties
-    settings      = [];     % all camera settings
-    status        = 'INIT'; % IDLE or BUSY
-    UserData      = [];     % User area
-    lastImageFile = '';     % last image file name(s)
-    lastImageDate = '';     % last image capture date
-    lastPreviewFile='';     % last preview file
-    lastPreviewDate='';     % last preview date
-    dir            =pwd;    % the current directory where images are stored
+    settings       = [];     % all camera settings
+    status         = 'INIT'; % IDLE or BUSY
+    UserData       = [];     % User area
+    lastImageFile  = '';     % last image file name(s)
+    lastImageDate  = '';     % last image capture date
+    lastPreviewFile= '';     % last preview file
+    lastPreviewDate= '';     % last preview date
+    dir            = pwd;    % the current directory where images are stored
   end % properties
   
   properties (Access=private)
     executable    = [];     % location of gphoto executable
     proc          = [];     % the gphoto2 background process (shell)
     expect        = {};     % commands being cached
+    lastPlotDate  = clock;  % the date of last plot
   end % properties
   
   events
@@ -188,8 +189,8 @@ classdef gphoto < handle
       % PREVIEW capture a preview (small) image with current camera settings
       
       if ~strcmp(self.status,'IDLE'), return; end
-      if ~isempty(dir(fullfile(pwd,'capture-preview.png')))
-        delete(fullfile(pwd,'capture-preview.png'));
+      if ~isempty(dir(fullfile(self.dir,'capture-preview.png')))
+        delete(fullfile(self.dir,'capture-preview.png'));
       end
       % we clear the stdout from the process (to get only what is new)
       self.proc.stdout = '';
@@ -197,7 +198,7 @@ classdef gphoto < handle
       % the capture filename is 'capture_preview.jpg'. Just need to wait for it.
       % the plot window will automatically update its content with the last image 
       % or preview file.
-      self.expect{end+1} = {'post_preview', self};
+      self.expect{end+1} = {'post_image', self};
     end % image
     
     function st = ishold(self)
@@ -235,13 +236,25 @@ classdef gphoto < handle
       end
     end % cd
     
+    function h=plot(self)
+      % PLOT plot the last image/preview.
+      
+      % get the figure handle
+      h = findall(0, 'Tag', [ mfilename '_figure' ]);
+      if isempty(h) % build the plot window
+        h = figure('Tag', [ mfilename '_figure' ], 'Name', mfilename);
+      end
+
+    end % plot
+    
   end % methods
   
 end % gphoto class
 
 % ------------------------------------------------------------------------------
 function CameraWatchFcn(self)
-  % CameraWatchFcn callnback attached to the proc timer
+  % CameraWatchFcn callback attached to the proc timer
+  
   if ~ishold(self) % 'IDLE'
     % when an action has been registered, we execute it, but only one at a time
     if ~isempty(self.expect)
@@ -250,7 +263,48 @@ function CameraWatchFcn(self)
       self.expect(1) = [];
     end
   end
-end % end
+
+  % PLOT_UPDATE update image in plot window when available
+  h = findall(0, 'Tag', [ mfilename '_figure' ]);
+  if isempty(h), return; end % nothing to do when not opened
+  
+  if numel(h) > 1, delete(h(2:end)); h=h(1); end
+  set(0, 'CurrentFigure', h); % make it active witout raising
+
+  % check if Capture or Preview is ready to be plotted
+  imRGB =[]; imName = ''; file = []; ispreview = false;
+  if     ~isempty(self.lastImageDate)   && etime(self.lastImageDate,self.lastPlotDate) > 0
+    file = self.lastImageFile;
+  elseif ~isempty(self.lastPreviewDate) && etime(self.lastPreviewDate,self.lastPlotDate) > 0 ...
+    file = self.lastPreviewFile; ispreview = true;
+  end
+  
+  if ~isempty(file)
+    if ~iscell(file), file = { file }; end
+    % check if an image can be read
+    
+    for index = 1:numel(file)
+      try; imRGB = imread(fullfile(self.dir, file{index})); imName=file{index}; break; end
+    end
+  end
+  if ~isempty(imRGB)
+    if (~ispreview || ...
+      (isempty(self.lastImageDate) || etime(self.lastPreviewDate,self.lastImageDate) > 5))
+      image(imRGB); 
+      axis tight
+      title(imName);
+    end
+    self.lastPlotDate = clock;
+  end
+  
+  % Trigger new preview when IDLE
+  if ~ishold(self) % 'IDLE'
+    if (~ispreview || ...
+      (isempty(self.lastImageDate) || etime(self.lastPreviewDate,self.lastImageDate) > 5))
+      preview(self);
+    end
+  end
+end % CameraWatchFcn
 
 function post_get(self, config)
   % POST_GET executed when a get is registered and camera becomes idle
@@ -271,16 +325,17 @@ end % post_get
 function post_image(self)
   % POST_IMAGE executed when a capture is registered and camera becomes idle
   % images have been written
-  disp([ mfilename ': image' ]);
   message = read(self.proc);
-  self.lastImageFile = gphoto_parse_output(self, message);
-  self.lastImageDate = clock;
+  files = gphoto_parse_output(self, message);
+  index = find(strcmp('capture_preview.jpg', files));
+  if ~isempty(index)
+    self.lastPreviewFile = files(index);
+    self.lastPreviewDate = clock;
+  end
+  index = find(~strcmp('capture_preview.jpg', files));
+  if ~isempty(index)
+    self.lastImageFile = files(index);
+    self.lastImageDate = clock;
+  end
 end % post_image
 
-function post_preview(self)
-  % POST_PRVEIEW executed when a preview is registered and camera becomes idle
-  disp([ mfilename ': preview' ]);
-  message = read(self.proc);
-  self.lastPreviewFile = gphoto_parse_output(self, message);
-  self.lastPreviewDate = clock;
-end % post_preview
