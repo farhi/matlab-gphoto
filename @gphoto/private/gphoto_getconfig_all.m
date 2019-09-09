@@ -16,6 +16,6 @@ function gphoto_config = gphoto_getconfig_all(self)
   end
   
   % parse the gphoto output
-  gphoto_config = gphoto_parse_output(self, message);
+  gphoto_config = orderfields(gphoto_parse_output(self, message));
   
 end % gphoto2_getconfig

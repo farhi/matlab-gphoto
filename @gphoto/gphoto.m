@@ -23,6 +23,7 @@ classdef gphoto < handle
   % - get     get the camera configuration 
   % - image   capture an image with current camera settings 
   % - ishold  get the camera status (IDLE, BUSY) 
+  % - plot    plot the camera liveview and captured images
   % - preview capture a preview (small) image with current camera settings 
   % - set     set a configuration value
   % - start   start the background gphoto control
@@ -46,6 +47,7 @@ classdef gphoto < handle
     proc          = [];     % the gphoto2 background process (shell)
     expect        = {};     % commands being cached
     lastPlotDate  = clock;  % the date of last plot
+    show_lines    = false;
   end % properties
   
   events
@@ -65,8 +67,9 @@ classdef gphoto < handle
       % get all config states (only when starting - use gphoto in non interactive)
       self.settings = gphoto_getconfig_all(self);
       
-      % start gphoto shell
+      % start gphoto shell and initiate view with a preview capture
       start(self);
+      preview(self);
       
     end % gphoto instantiate
     
@@ -97,6 +100,23 @@ classdef gphoto < handle
       stop(self);
     end % delete
     
+    function c = char(self, op)
+      % CHAR returns a character representation of the object
+      c = { [ 'Status: ' self.status ] };
+      if nargin > 1
+        f = fieldnames(self.settings);
+        for index=1:numel(f)
+          if isfield(self.settings.(f{index}),'Current')
+            c{end+1} = [ '  ' f{index} ': ' ...
+              num2str(self.settings.(f{index}).Current) ];
+          else
+            c{end+1} = [ '  ' f{index} ];
+          end
+        end
+      end
+      c = char(c);
+    end % char
+    
     function get(self, config)
       % GET get the camera configuration
       %   GET(g) get all configuration states (from cache).
@@ -113,15 +133,7 @@ classdef gphoto < handle
         self.settings = gphoto_getconfig_all(self);
         start(self);
       elseif isempty(config)
-        f = fieldnames(self.settings);
-        for index=1:numel(f)
-          if isfield(self.settings.(f{index}),'Current')
-            disp([ '  ' f{index} ': ' ...
-              num2str(self.settings.(f{index}).Current) ])
-          else
-            disp([ '  ' f{index} ]);
-          end
-        end
+        disp(char(self, 'long'));
       elseif isfield(self.settings, config)
         % we clear the stdout from the process (to get only what is new)
         self.proc.stdout = '';
@@ -185,6 +197,11 @@ classdef gphoto < handle
       self.expect{end+1} = {'post_image', self};
     end % image
     
+    function capture(self)
+      % CAPTURE capture an image with current camera settings
+      image(self);
+    end % capture
+    
     function preview(self)
       % PREVIEW capture a preview (small) image with current camera settings
       
@@ -199,7 +216,41 @@ classdef gphoto < handle
       % the plot window will automatically update its content with the last image 
       % or preview file.
       self.expect{end+1} = {'post_image', self};
-    end % image
+    end % preview
+    
+    function dt = period(self, varargin)
+      % PERIOD get or set the gphoto preview rate, in [s].
+      
+      % special case for d='gui'
+      if ~isempty(varargin) && ischar(varargin{1}) && strcmp(varargin{1}, 'gui')
+        dt = period(self.proc);
+        dt = inputdlg('Specify preview rate [s]. Use Inf or 0 to disable liveview.', ...
+          [ mfilename ': Preview rate' ],1,{num2str(dt)});
+        if isempty(dt), return; end
+        dt = str2num(dt{1});
+        if isnan(dt), return; end
+        if dt <= 0, dt = Inf; end
+        varargin{1} = dt;
+      end
+        
+      dt = period(self.proc, varargin{:}); % this controls the background proc
+    end % period
+    
+    function grid(self, st)
+      % GRID set or toggle lines
+      %   GRID(s, 'on'|'off'|'toggle') controls line display
+      if nargin == 1, st = ''; end
+      if ischar(st)
+        switch lower(st)
+        case 'on'
+          self.show_lines = true;
+        case 'off'
+          self.show_lines = false;
+        case {'','toggle'}
+          self.show_lines = ~self.show_lines;
+        end
+      end
+    end % grid
     
     function st = ishold(self)
       % ISHOLD get the camera status (IDLE, BUSY)
@@ -224,6 +275,15 @@ classdef gphoto < handle
         d = self.dir;
       else
         if ~strcmp(self.status,'IDLE'), return; end
+        
+        % special case for d='gui'
+        if strcmp(d, 'gui')
+          d = inputdlg('Specify directory where to store images', ...
+            [ mfilename ': Directory for images' ],1,{self.dir});
+          if isempty(d), return; end
+          d = d{1};
+        end
+        
         if ~ischar(d), return; end
         % test if dir exists
         [p,f] = fileparts(d);
@@ -236,13 +296,65 @@ classdef gphoto < handle
       end
     end % cd
     
+    function about(self)
+      % ABOUT 
+      c = cellstr(char(self,'long'));
+      c{end+1} = [ mfilename ' for Matlab' ];
+      c{end+1} = '(c) E. Farhi <https://github.com/farhi/matlab-gphoto>';
+      listdlg('ListString', c, 'Name', [ mfilename ': About' ],'ListSize',[ 320 400 ]);
+    end % about
+    
+    function help(self)
+    end % help
+    
     function h=plot(self)
       % PLOT plot the last image/preview.
       
       % get the figure handle
       h = findall(0, 'Tag', [ mfilename '_figure' ]);
       if isempty(h) % build the plot window
-        h = figure('Tag', [ mfilename '_figure' ], 'Name', mfilename);
+        h = figure('Tag', [ mfilename '_figure' ], 'Name', mfilename, 'MenuBar','none');
+        set(h, 'Units','normalized');
+        
+        % File menu
+        m = uimenu(h, 'Label', 'File');
+        uimenu(m, 'Label', 'Save',        ...
+          'Callback', 'filemenufcn(gcbf,''FileSave'')','Accelerator','s');
+        uimenu(m, 'Label', 'Save As...',        ...
+          'Callback', 'filemenufcn(gcbf,''FileSaveAs'')');
+        uimenu(m, 'Label', 'Print',        ...
+          'Callback', 'filemenufcn(gcbf,''FilePrintPreview'')','Accelerator','p');
+        % ---------------------
+        uimenu(m, 'Label', 'Close',        ...
+          'Callback', 'filemenufcn(gcbf,''FileClose'')', ...
+          'Accelerator','w', 'Separator','on');
+        
+        % Camera menu
+        m0 = uimenu(h, 'Label', 'Camera');
+        uimenu(m0, 'Label', 'Capture image', ...
+          'Callback', @(src,evt)image(self), 'Accelerator','c');
+        uimenu(m0, 'Label', 'Capture preview', ...
+          'Callback', @(src,evt)preview(self));
+        uimenu(m0, 'Label', 'Speficy directory for storage...', ...
+          'Callback', @(src,evt)cd(self,'gui'));
+        uimenu(m0, 'Label', 'Speficy liveview rate...', ...
+          'Callback', @(src,evt)period(self,'gui'));
+        uimenu(m0, 'Label', 'Toggle line display', ...
+          'Callback', @(src,evt)grid(self));
+        % ---------------------
+        uimenu(m0, 'Label', 'Help', ...
+          'Callback', @(src,evt)help(self), 'Separator','on');
+        uimenu(m0, 'Label', [ 'About camera and ' mfilename ], ...
+          'Callback', @(src,evt)about(self));
+          
+        g = gca; % initiate an empty axes
+        set(g, 'Units','normalized');
+          
+        % we add a button for capture
+        m0 = uicontrol('Style', 'pushbutton', 'String', 'Capture',...
+          'Units','normalized','Position',[ 0 0 0.2 0.1 ], ...
+          'Callback', @(src,evt)image(self),'BackgroundColor','r');
+
       end
 
     end % plot
@@ -292,10 +404,23 @@ function CameraWatchFcn(self)
       (isempty(self.lastImageDate) || etime(self.lastPreviewDate,self.lastImageDate) > 5))
       image(imRGB); 
       axis tight
-      title(imName);
+      set(gca,'XTickLabel',[],'XTick',[]); 
+      set(gca,'YTickLabel',[],'YTick',[]); 
+      set(gca,'ZTickLabel',[],'ZTick',[])
+      xlabel(self.dir); ylabel(' '); zlabel(' ');
+      title([ '[' datestr(clock) '] ' imName ],'interpreter','none');
+      if self.show_lines
+        xl = xlim(gca);
+        yl = ylim(gca);
+        hl = line([ 0 max(xl) ], [ 0 max(yl)]);
+        set(hl, 'LineStyle','--','Tag', [ mfilename '_Line1' ]);
+        hl = line([ 0 max(xl) ], [ max(yl) 0]);
+        set(hl, 'LineStyle','--','Tag', [ mfilename '_Line2' ]);
+      end
     end
     self.lastPlotDate = clock;
   end
+  set(h, 'Name', [ mfilename ': ' char(self) ]);
   
   % Trigger new preview when IDLE
   if ~ishold(self) % 'IDLE'
@@ -303,6 +428,10 @@ function CameraWatchFcn(self)
       (isempty(self.lastImageDate) || etime(self.lastPreviewDate,self.lastImageDate) > 5))
       preview(self);
     end
+    set(gca,'XColor','k','YColor','k');
+  else
+    % set axes borders to red when BUSY
+    set(gca,'XColor','r','YColor','r');
   end
 end % CameraWatchFcn
 
@@ -323,7 +452,6 @@ function post_get(self, config)
 end % post_get
 
 function post_image(self)
-  % POST_IMAGE executed when a capture is registered and camera becomes idle
   % images have been written
   message = read(self.proc);
   files = gphoto_parse_output(self, message);
