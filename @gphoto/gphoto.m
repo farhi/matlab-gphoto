@@ -40,6 +40,7 @@ classdef gphoto < handle
     lastPreviewFile= '';     % last preview file
     lastPreviewDate= '';     % last preview date
     dir            = pwd;    % the current directory where images are stored
+    verbose        = false;
   end % properties
   
   properties (Access=private)
@@ -48,6 +49,11 @@ classdef gphoto < handle
     expect        = {};     % commands being cached
     lastPlotDate  = clock;  % the date of last plot
     show_lines    = false;
+    period_preview= 1;
+    focus_history = [];
+    figure        = [];
+    focus_axes    = [];
+    image_axes    = [];
   end % properties
   
   events
@@ -80,7 +86,7 @@ classdef gphoto < handle
         % set, get, capture.
         self.proc = process([ self.executable ' --shell --force-overwrite' ]);
         silent(self.proc);
-        period(self.proc, 1); % auto update period for stdout/err/in
+        self.period_preview = period(self.proc, 1); % auto update period for stdout/err/in
         
         % attach our CameraWatchFcn to the gphoto shell'update'
         addlistener(self.proc, 'processUpdate', @(src,evt)CameraWatchFcn(self));
@@ -150,7 +156,7 @@ classdef gphoto < handle
       %
       %   SET(g) display all settable configuration fields
       if ~strcmp(self.status,'IDLE'), return; end
-      if nargin < 3
+      if nargin == 1
         f = fieldnames(self.settings);
         for index=1:numel(f)
           if isfield(self.settings.(f{index}), 'Readonly') ...
@@ -163,8 +169,9 @@ classdef gphoto < handle
             end
           end
         end
-        return; 
+        return;
       end
+      
       if ~ischar(config), return; end
       if ~isfield(self.settings, config), return; end
       if isfield(self.settings.(config), 'Readonly') ...
@@ -172,7 +179,39 @@ classdef gphoto < handle
         disp([ mfilename ': set: property ' config ' is Readonly.' ])
         return
       end
-      
+      if nargin == 2 && isfield(self.settings.(config), 'Type')
+        t = [ mfilename ': Set ' config ' ' self.settings.(config).Type ];
+        switch self.settings.(config).Type
+        case 'RANGE'
+          % Bottom Top Step, Current is numeric
+          value = inputdlg([ config ' from ' num2str(self.settings.(config).Bottom) ...
+            ' to ' num2str(self.settings.(config).Top) ' in step ' ...
+              num2str(self.settings.(config).Step) ], ...
+            t, 1, ...
+            { num2str(self.settings.(config).Current) });
+          if isempty(value), return; end
+          value = str2num(value{1});
+          if ~isfinite(value), return; end
+        case 'RADIO'
+          % Choice: {'0 3:2'  '1 16:9'} i.e. 'index value'
+          values = self.settings.(config).Choice;
+          for index=1:numel(values);
+            if isnumeric(values{index})
+              this = values{index};
+              values{index} = num2str(this(:)');
+            end
+          end
+          [~,values] = strtok(values);
+          values = strtrim(values);
+          value = listdlg('ListString', values, 'Name', t,'ListSize',[ 320 400 ]);
+          if isempty(value), return; end
+          value = values{value};
+        otherwise % MENU TOGGLE: not supported
+          disp([ t ': not supported' ])
+          return
+        end
+      end
+      if isempty(value), return; end
       % we clear the stdout from the process (to get only what is new)
       self.proc.stdout = '';
       write(self.proc, sprintf('set-config %s=%s\n', config, num2str(value)));
@@ -193,6 +232,7 @@ classdef gphoto < handle
       % we clear the stdout from the process (to get only what is new)
       self.proc.stdout = '';
       write(self.proc, sprintf('capture-image-and-download\n'));
+      notify(self, 'captureStart');
       % register a post_image (to get image names)
       self.expect{end+1} = {'post_image', self};
     end % image
@@ -222,18 +262,23 @@ classdef gphoto < handle
       % PERIOD get or set the gphoto preview rate, in [s].
       
       % special case for d='gui'
+      dt0 = period(self.proc);
       if ~isempty(varargin) && ischar(varargin{1}) && strcmp(varargin{1}, 'gui')
-        dt = period(self.proc);
         dt = inputdlg('Specify preview rate [s]. Use Inf or 0 to disable liveview.', ...
-          [ mfilename ': Preview rate' ],1,{num2str(dt)});
+          [ mfilename ': Preview rate' ],1,{num2str(dt0)});
         if isempty(dt), return; end
         dt = str2num(dt{1});
         if isnan(dt), return; end
         if dt <= 0, dt = Inf; end
         varargin{1} = dt;
       end
-        
-      dt = period(self.proc, varargin{:}); % this controls the background proc
+
+      if dt < dt0
+        dt = period(self.proc, dt); % this controls the background proc
+      elseif dt > 1 && dt0 < 1
+        period(self.proc, 1);
+      end
+      self.period_preview = dt;
     end % period
     
     function grid(self, st)
@@ -261,8 +306,10 @@ classdef gphoto < handle
       lines = lines{end};
       if strncmp(lines, 'gphoto2:',8) && lines(end-1) == '>' && isspace(lines(end))
         self.status = 'IDLE'; st = 0;
+        notify(self, 'idle');
       else
         self.status = 'BUSY'; st = 1;
+        notify(self, 'busy');
       end
     end % ishold
     
@@ -347,14 +394,16 @@ classdef gphoto < handle
         uimenu(m0, 'Label', [ 'About camera and ' mfilename ], ...
           'Callback', @(src,evt)about(self));
           
-        g = gca; % initiate an empty axes
-        set(g, 'Units','normalized');
+        self.image_axes = gca; % initiate an empty axes
+        set(self.image_axes, 'Units','normalized','Position',[0.1 0.11 0.8 0.8]);
           
         % we add a button for capture
         m0 = uicontrol('Style', 'pushbutton', 'String', 'Capture',...
           'Units','normalized','Position',[ 0 0 0.2 0.1 ], ...
           'Callback', @(src,evt)image(self),'BackgroundColor','r');
-
+        % add a small axes to display focus history
+        self.focus_axes = axes('position', [0.7 0.01 0.2 0.08]);
+        set(self.focus_axes, 'Tag', [ mfilename '_focus_axes' ]);
       end
 
     end % plot
@@ -386,8 +435,8 @@ function CameraWatchFcn(self)
   % check if Capture or Preview is ready to be plotted
   imRGB =[]; imName = ''; file = []; ispreview = false;
   if     ~isempty(self.lastImageDate)   && etime(self.lastImageDate,self.lastPlotDate) > 0
-    file = self.lastImageFile;
-  elseif ~isempty(self.lastPreviewDate) && etime(self.lastPreviewDate,self.lastPlotDate) > 0 ...
+    file = self.lastImageFile; notify(self, 'captureStop');
+  elseif ~isempty(self.lastPreviewDate) && etime(self.lastPreviewDate,self.lastPlotDate) > self.period_preview
     file = self.lastPreviewFile; ispreview = true;
   end
   
@@ -402,20 +451,43 @@ function CameraWatchFcn(self)
   if ~isempty(imRGB)
     if (~ispreview || ...
       (isempty(self.lastImageDate) || etime(self.lastPreviewDate,self.lastImageDate) > 5))
-      image(imRGB); 
-      axis tight
-      set(gca,'XTickLabel',[],'XTick',[]); 
-      set(gca,'YTickLabel',[],'YTick',[]); 
-      set(gca,'ZTickLabel',[],'ZTick',[])
-      xlabel(self.dir); ylabel(' '); zlabel(' ');
-      title([ '[' datestr(clock) '] ' imName ],'interpreter','none');
+      image(imRGB,'Parent',self.image_axes); 
+      axis(self.image_axes, 'tight');
+      set(self.image_axes,'XTickLabel',[],'XTick',[]); 
+      set(self.image_axes,'YTickLabel',[],'YTick',[]); 
+      set(self.image_axes,'ZTickLabel',[],'ZTick',[]);
+      
+      
+      % compute image quality: blurred image has smooth variations. We sum up diff.
+      im = double(imRGB);
+      im1 = abs(diff(im,[], 1))/numel(im);
+      im2 = abs(diff(im,[], 2))/numel(im);
+      int = sum(im1(:))+sum(im2(:));
+      self.focus_history(end+1) = int;
+      if numel(self.focus_history) > 100
+        self.focus_history = self.focus_history((end-99):end);
+      end
+      title(self.image_axes, ...
+        [ '[' datestr(clock) '] ' imName ], ...
+        'interpreter','none','FontWeight','bold');
+      xlabel(self.image_axes, self.dir); ylabel(self.image_axes, ' '); zlabel(self.image_axes, ' ');
+
+      % show X marker and focus history
       if self.show_lines
-        xl = xlim(gca);
-        yl = ylim(gca);
+        xl = xlim(self.image_axes);
+        yl = ylim(self.image_axes);
         hl = line([ 0 max(xl) ], [ 0 max(yl)]);
-        set(hl, 'LineStyle','--','Tag', [ mfilename '_Line1' ]);
+        set(hl, 'LineStyle','--','Tag', [ mfilename '_Line1' ], 'Parent',self.image_axes);
         hl = line([ 0 max(xl) ], [ max(yl) 0]);
-        set(hl, 'LineStyle','--','Tag', [ mfilename '_Line2' ]);
+        set(hl, 'LineStyle','--','Tag', [ mfilename '_Line2' ], 'Parent',self.image_axes);
+        % focus history
+        plot(self.focus_axes, self.focus_history);
+        axis(self.focus_axes, 'tight');
+        set(self.focus_axes,'XTickLabel',[],'XTick',[], 'visible','on'); 
+        set(self.focus_axes,'ZTickLabel',[],'ZTick',[]);
+        xlabel(self.focus_axes,' '); ylabel(self.focus_axes,num2str(int,3)); zlabel(self.focus_axes,' ');
+      else
+        set(self.focus_axes,'visible','off');
       end
     end
     self.lastPlotDate = clock;
@@ -428,10 +500,10 @@ function CameraWatchFcn(self)
       (isempty(self.lastImageDate) || etime(self.lastPreviewDate,self.lastImageDate) > 5))
       preview(self);
     end
-    set(gca,'XColor','k','YColor','k');
+    set(self.image_axes,'XColor','k','YColor','k');
   else
     % set axes borders to red when BUSY
-    set(gca,'XColor','r','YColor','r');
+    set(self.image_axes,'XColor','r','YColor','r');
   end
 end % CameraWatchFcn
 
@@ -440,6 +512,7 @@ function post_get(self, config)
   
   % update the settings
   message = read(self.proc);
+  if self.verbose, disp(message); end
   value = gphoto_parse_output(self, message, config); % read result and parse it
   if isstruct(value) && numel(fieldnames(value)) == 1
     value = struct2cell(value);
@@ -454,6 +527,7 @@ end % post_get
 function post_image(self)
   % images have been written
   message = read(self.proc);
+  if self.verbose, disp(message); end
   files = gphoto_parse_output(self, message);
   index = find(strcmp('capture_preview.jpg', files));
   if ~isempty(index)
