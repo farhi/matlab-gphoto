@@ -18,16 +18,19 @@ classdef gphoto < handle
   %
   % Methods
   % =======
-  % - cd      change or get current directory where images are stored. 
-  % - delete  close the Gphoto connection
-  % - get     get the camera configuration 
-  % - image   capture an image with current camera settings 
-  % - ishold  get the camera status (IDLE, BUSY) 
-  % - plot    plot the camera liveview and captured images
-  % - preview capture a preview (small) image with current camera settings 
-  % - set     set a configuration value
-  % - start   start the background gphoto control
-  % - stop    stop the background gphoto control. Restart it with start.
+  % - cd          change or get current directory where images are stored. 
+  % - continuous  set/toggle continuous shooting (timelapse).
+  % - delete      close the Gphoto connection.
+  % - get         get the camera configuration.
+  % - grid        set/toggle line markers and focus quality on plot.
+  % - image       capture an image with current camera settings.
+  % - ishold      get the camera status (IDLE, BUSY).
+  % - plot        plot the camera liveview and captured images.
+  % - period      set/get plot update periodicity, in seconds.
+  % - preview     capture a preview (small) image with current camera settings.
+  % - set         set a configuration value.
+  % - start       start the background gphoto control.
+  % - stop        stop the background gphoto control. Restart it with start.
   %
   % (c) E. Farhi, GPL2, 2019.
 
@@ -54,6 +57,7 @@ classdef gphoto < handle
     figure        = [];
     focus_axes    = [];
     image_axes    = [];
+    shoot_endless = false;
   end % properties
   
   events
@@ -70,12 +74,12 @@ classdef gphoto < handle
       % where is the executable ?
       self.executable = gphoto_executable;
       
-      % get all config states (only when starting - use gphoto in non interactive)
-      self.settings = gphoto_getconfig_all(self);
-      
       % start gphoto shell and initiate view with a preview capture
       start(self);
       preview(self);
+      
+      % update all settings
+      self.settings = gphoto_getconfig_all(self);
       
     end % gphoto instantiate
     
@@ -87,6 +91,8 @@ classdef gphoto < handle
         self.proc = process([ self.executable ' --shell --force-overwrite' ]);
         silent(self.proc);
         self.period_preview = period(self.proc, 1); % auto update period for stdout/err/in
+        
+        self.settings = gphoto_getconfig_all(self);
         
         % attach our CameraWatchFcn to the gphoto shell'update'
         addlistener(self.proc, 'processUpdate', @(src,evt)CameraWatchFcn(self));
@@ -150,75 +156,7 @@ classdef gphoto < handle
       end
     end % get
     
-    function set(self, config, value)
-      % SET set a configuration value
-      %   SET(g, config, value) sets config=value on the camera
-      %
-      %   SET(g) display all settable configuration fields
-      if ~strcmp(self.status,'IDLE'), return; end
-      if nargin == 1
-        f = fieldnames(self.settings);
-        for index=1:numel(f)
-          if isfield(self.settings.(f{index}), 'Readonly') ...
-            && ~self.settings.(f{index}).Readonly
-            if isfield(self.settings.(f{index}),'Current')
-              disp([ '  ' f{index} ': ' ...
-                num2str(self.settings.(f{index}).Current) ])
-            else
-              disp([ '  ' f{index} ]);
-            end
-          end
-        end
-        return;
-      end
-      
-      if ~ischar(config), return; end
-      if ~isfield(self.settings, config), return; end
-      if isfield(self.settings.(config), 'Readonly') ...
-        &&  self.settings.(config).Readonly
-        disp([ mfilename ': set: property ' config ' is Readonly.' ])
-        return
-      end
-      if nargin == 2 && isfield(self.settings.(config), 'Type')
-        t = [ mfilename ': Set ' config ' ' self.settings.(config).Type ];
-        switch self.settings.(config).Type
-        case 'RANGE'
-          % Bottom Top Step, Current is numeric
-          value = inputdlg([ config ' from ' num2str(self.settings.(config).Bottom) ...
-            ' to ' num2str(self.settings.(config).Top) ' in step ' ...
-              num2str(self.settings.(config).Step) ], ...
-            t, 1, ...
-            { num2str(self.settings.(config).Current) });
-          if isempty(value), return; end
-          value = str2num(value{1});
-          if ~isfinite(value), return; end
-        case 'RADIO'
-          % Choice: {'0 3:2'  '1 16:9'} i.e. 'index value'
-          values = self.settings.(config).Choice;
-          for index=1:numel(values);
-            if isnumeric(values{index})
-              this = values{index};
-              values{index} = num2str(this(:)');
-            end
-          end
-          [~,values] = strtok(values);
-          values = strtrim(values);
-          value = listdlg('ListString', values, 'Name', t,'ListSize',[ 320 400 ]);
-          if isempty(value), return; end
-          value = values{value};
-        otherwise % MENU TOGGLE: not supported
-          disp([ t ': not supported' ])
-          return
-        end
-      end
-      if isempty(value), return; end
-      % we clear the stdout from the process (to get only what is new)
-      self.proc.stdout = '';
-      write(self.proc, sprintf('set-config %s=%s\n', config, num2str(value)));
-      % update the settings
-      self.settings.(config).Current = value;
-      
-    end % set
+    
     
     function image(self)
       % IMAGE capture an image with current camera settings
@@ -297,19 +235,47 @@ classdef gphoto < handle
       end
     end % grid
     
+    function continuous(self, st)
+      % CONTINUOUS set or toggle continuous shooting (timelapse)
+      %   CONTINUOUS(s, 'on'|'off'|'toggle') controls continuous shooting
+      if nargin == 1, st = ''; end
+      if ischar(st)
+        switch lower(st)
+        case 'on'
+          self.shoot_endless = true;
+        case 'off'
+          self.shoot_endless = false;
+        case {'','toggle'}
+          self.shoot_endless = ~self.shoot_endless;
+        end
+      end
+      if self.shoot_endless
+        disp([ mfilename ': continuous shooting: ON' ]);
+      else
+        disp([ mfilename ': continuous shooting: OFF' ]);
+      end
+    end % continuous
+    
     function st = ishold(self)
       % ISHOLD get the camera status (IDLE, BUSY)
       %   st = ISHOLD(s) returns 1 when the camera is BUSY.
       
       % the last line of the shell prompt starts with 'gphoto2:' and ends with '> '
       lines = strread(self.proc.stdout,'%s','delimiter','\n\r');
+      if isempty(lines) || isempty(lines{1})
+        self.status = 'ERROR';
+        st = 1;
+        return
+      end
       lines = lines{end};
       if strncmp(lines, 'gphoto2:',8) && lines(end-1) == '>' && isspace(lines(end))
         self.status = 'IDLE'; st = 0;
         notify(self, 'idle');
-      else
+      elseif ~isempty(lines)
         self.status = 'BUSY'; st = 1;
         notify(self, 'busy');
+      else
+        
       end
     end % ishold
     
@@ -348,65 +314,12 @@ classdef gphoto < handle
       c = cellstr(char(self,'long'));
       c{end+1} = [ mfilename ' for Matlab' ];
       c{end+1} = '(c) E. Farhi <https://github.com/farhi/matlab-gphoto>';
-      listdlg('ListString', c, 'Name', [ mfilename ': About' ],'ListSize',[ 320 400 ]);
+      listdlg('ListString', c, 'Name', [ mfilename ': About' ], ...
+        'ListSize',[ 320 400 ],'SelectionMode','single');
     end % about
     
     function help(self)
     end % help
-    
-    function h=plot(self)
-      % PLOT plot the last image/preview.
-      
-      % get the figure handle
-      h = findall(0, 'Tag', [ mfilename '_figure' ]);
-      if isempty(h) % build the plot window
-        h = figure('Tag', [ mfilename '_figure' ], 'Name', mfilename, 'MenuBar','none');
-        set(h, 'Units','normalized');
-        
-        % File menu
-        m = uimenu(h, 'Label', 'File');
-        uimenu(m, 'Label', 'Save',        ...
-          'Callback', 'filemenufcn(gcbf,''FileSave'')','Accelerator','s');
-        uimenu(m, 'Label', 'Save As...',        ...
-          'Callback', 'filemenufcn(gcbf,''FileSaveAs'')');
-        uimenu(m, 'Label', 'Print',        ...
-          'Callback', 'filemenufcn(gcbf,''FilePrintPreview'')','Accelerator','p');
-        % ---------------------
-        uimenu(m, 'Label', 'Close',        ...
-          'Callback', 'filemenufcn(gcbf,''FileClose'')', ...
-          'Accelerator','w', 'Separator','on');
-        
-        % Camera menu
-        m0 = uimenu(h, 'Label', 'Camera');
-        uimenu(m0, 'Label', 'Capture image', ...
-          'Callback', @(src,evt)image(self), 'Accelerator','c');
-        uimenu(m0, 'Label', 'Capture preview', ...
-          'Callback', @(src,evt)preview(self));
-        uimenu(m0, 'Label', 'Speficy directory for storage...', ...
-          'Callback', @(src,evt)cd(self,'gui'));
-        uimenu(m0, 'Label', 'Speficy liveview rate...', ...
-          'Callback', @(src,evt)period(self,'gui'));
-        uimenu(m0, 'Label', 'Toggle line display', ...
-          'Callback', @(src,evt)grid(self));
-        % ---------------------
-        uimenu(m0, 'Label', 'Help', ...
-          'Callback', @(src,evt)help(self), 'Separator','on');
-        uimenu(m0, 'Label', [ 'About camera and ' mfilename ], ...
-          'Callback', @(src,evt)about(self));
-          
-        self.image_axes = gca; % initiate an empty axes
-        set(self.image_axes, 'Units','normalized','Position',[0.1 0.11 0.8 0.8]);
-          
-        % we add a button for capture
-        m0 = uicontrol('Style', 'pushbutton', 'String', 'Capture',...
-          'Units','normalized','Position',[ 0 0 0.2 0.1 ], ...
-          'Callback', @(src,evt)image(self),'BackgroundColor','r');
-        % add a small axes to display focus history
-        self.focus_axes = axes('position', [0.7 0.01 0.2 0.08]);
-        set(self.focus_axes, 'Tag', [ mfilename '_focus_axes' ]);
-      end
-
-    end % plot
     
   end % methods
   
@@ -415,7 +328,7 @@ end % gphoto class
 % ------------------------------------------------------------------------------
 function CameraWatchFcn(self)
   % CameraWatchFcn callback attached to the proc timer
-  
+
   if ~ishold(self) % 'IDLE'
     % when an action has been registered, we execute it, but only one at a time
     if ~isempty(self.expect)
@@ -494,9 +407,11 @@ function CameraWatchFcn(self)
   end
   set(h, 'Name', [ mfilename ': ' char(self) ]);
   
-  % Trigger new preview when IDLE
+  % Trigger new preview when IDLE or CONTINUOUS
   if ~ishold(self) % 'IDLE'
-    if (~ispreview || ...
+    if self.shoot_endless
+      image(self);
+    elseif (~ispreview || ...
       (isempty(self.lastImageDate) || etime(self.lastPreviewDate,self.lastImageDate) > 5))
       preview(self);
     end
