@@ -27,7 +27,8 @@ function d = display(s_in, name)
     if length(s_in) > 1
       d = [ d sprintf('Index ') ];
     end
-    d = [ d sprintf('     [ID] [status]\n') ];
+    %                  IDLE Sony Corporation ILCE-5100  [port: auto] 
+    d = [ d sprintf('[Status] [Camera]\n') ];
 
     % now build the output string using char method
     d = [ d char(s_in) sprintf('\n') ];
