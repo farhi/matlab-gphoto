@@ -44,6 +44,8 @@ classdef gphoto < handle
     lastPreviewDate= '';     % last preview date
     dir            = pwd;    % the current directory where images are stored
     verbose        = false;
+    port           = 'auto';
+    version        = '';
   end % properties
   
   properties (Access=private)
@@ -68,34 +70,52 @@ classdef gphoto < handle
   end
   
   methods
-    function self = gphoto
+    function self = gphoto(varargin)
       % GPHOTO initialize the remote control for DSLR Cameras
+      %   g=GPHOTO auto-detect a connected camera and connect to it.
+      % 
+      %   g=GPHOTO(port) connect using the specified port, e.g.
+      %   'usb:XXX,YYY'         USB cable
+      %   'ptpip:XX.YY.ZZ.TT'   PTP over IP
+      %   'serial:/dev/ttyXX'   serial port
 
       % where is the executable ?
       self.executable = gphoto_executable;
       
+      % we identify the connected cameras
+      [cameras,ports] = gphoto_ports(self);
+      if ~nargin && numel(cameras) > 1
+        error([ mfilename ': there are more than one camera connected. Specify the port.' ])
+      end
+      
       % start gphoto shell and initiate view with a preview capture
-      start(self);
+      start(self, varargin{:});
       preview(self);
       
       % update all settings
-      self.settings = gphoto_getconfig_all(self);
+      gphoto_getall(self);
       
     end % gphoto instantiate
     
-    function start(self)
+    function start(self, port)
       % START start the background gphoto control
+      if nargin < 2, port = self.port; end
       if isempty(self.proc) || ~isvalid(self.proc)
+        cmd = [ self.executable ' --shell --force-overwrite' ];
+        if nargin > 1 && ~isempty(port) && ischar(port) && ~strcmp(port,'auto')
+          % specify the port
+          cmd = [ cmd ' --port ' port ];
+          self.port = port;
+        end
         % we start the gphoto shell which is reactive and allows background
         % set, get, capture.
-        self.proc = process([ self.executable ' --shell --force-overwrite' ]);
+        self.proc = process(cmd);
         silent(self.proc);
         self.period_preview = period(self.proc, 1); % auto update period for stdout/err/in
         
-        self.settings = gphoto_getconfig_all(self);
-        
         % attach our CameraWatchFcn to the gphoto shell'update'
         addlistener(self.proc, 'processUpdate', @(src,evt)CameraWatchFcn(self));
+        identify(self);
       end
     end % start
     
@@ -114,7 +134,7 @@ classdef gphoto < handle
     
     function c = char(self, op)
       % CHAR returns a character representation of the object
-      c = { [ 'Status: ' self.status ] };
+      c = { sprintf(' %6s   %s [port: %s] ', self.status, self.version, self.port) };
       if nargin > 1
         f = fieldnames(self.settings);
         for index=1:numel(f)
@@ -129,6 +149,30 @@ classdef gphoto < handle
       c = char(c);
     end % char
     
+    function reset(self)
+      % RESET reset the camera connection.
+      stop(self);
+      
+      start(self);
+    end % reset
+    
+    function id = identify(self)
+     % IDENTIFY identify the connected camera
+      id = '';
+      try
+        if isfield(self.settings, 'manufacturer')
+          id = [ id self.settings.manufacturer.Current ' ' ];
+        end
+      end
+      try
+        if isfield(self.settings, 'cameramodel')
+          id = [ id self.settings.cameramodel.Current ' ' ];
+        end
+      end
+      self.version = id;
+      disp([ mfilename ': connected to ' id ]);
+    end % identify
+    
     function get(self, config)
       % GET get the camera configuration
       %   GET(g) get all configuration states (from cache).
@@ -141,9 +185,7 @@ classdef gphoto < handle
       if ~ischar(config), return; end
       
       if strcmp(config, 'all')
-        stop(self);
-        self.settings = gphoto_getconfig_all(self);
-        start(self);
+        gphoto_getall(self);
       elseif isempty(config)
         disp(char(self, 'long'));
       elseif isfield(self.settings, config)
@@ -152,7 +194,7 @@ classdef gphoto < handle
         % update value from the camera
         write(self.proc, sprintf('get-config %s\n', config));
         % register expect action as post_get (to get the value when ready)
-        self.expect{end+1} = {'post_get', self, config};
+        self.expect{end+1} = { 'post_get', self, config };
       end
     end % get
     
@@ -249,10 +291,13 @@ classdef gphoto < handle
           self.shoot_endless = ~self.shoot_endless;
         end
       end
+      h = findall(0, 'Tag', [ mfilename '_continuous' ]);
       if self.shoot_endless
         disp([ mfilename ': continuous shooting: ON' ]);
+        if ~isempty(h), set(h, 'Checked','on'); end
       else
         disp([ mfilename ': continuous shooting: OFF' ]);
+        if ~isempty(h), set(h, 'Checked','off'); end
       end
     end % continuous
     
@@ -264,6 +309,8 @@ classdef gphoto < handle
       lines = strread(self.proc.stdout,'%s','delimiter','\n\r');
       if isempty(lines) || isempty(lines{1})
         self.status = 'ERROR';
+        if self.verbose, disp(self.proc.stdout); end
+        self.UserData.error = self.proc.stdout;
         st = 1;
         return
       end
@@ -321,10 +368,19 @@ classdef gphoto < handle
     function help(self)
     end % help
     
+    function waitfor(self)
+      % WAITFOR waits for camera to be IDLE
+      while ishold(self)
+        pause(self.period_preview);
+      end
+    end % waitfor
+    
   end % methods
   
 end % gphoto class
 
+% ------------------------------------------------------------------------------
+%               MAIN LOOP EXECUTED WHEN GPHOTO IS UPDATED
 % ------------------------------------------------------------------------------
 function CameraWatchFcn(self)
   % CameraWatchFcn callback attached to the proc timer
@@ -456,3 +512,27 @@ function post_image(self)
   end
 end % post_image
 
+function post_getconfig(self)
+  % list-config has been received. We get the output
+  message = read(self.proc);
+  if self.verbose, disp(message); end
+  % get all config fields: they start with '/'
+  t = textscan(message, '%s','Delimiter','\n'); % into lines
+  t = t{1}; config = {};
+  self.UserData.raw1 = t;
+  for index=1:numel(t)
+    this = t{index};
+    if this(1) == '/'
+      write(self.proc, sprintf('get-config %s\n', this));
+    end
+  end
+  self.expect{end+1} = { 'post_getvalues', self, config};
+end
+
+function post_getvalues(self, config)
+  % we have sent get-config for all fields. get results into settings...
+ message = read(self.proc);
+ if self.verbose, disp(message); end
+ self.settings = gphoto_parse_output(self, message);
+ identify(self); % update identification string
+end % post_getvalues
