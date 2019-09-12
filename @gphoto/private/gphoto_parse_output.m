@@ -26,6 +26,9 @@ function gphoto_config = gphoto_parse_output(self, message, config)
   else config = {};
   end
   
+  % we first remove any 'get-config ' tokens which shield field names
+  t = strrep(t, 'get-config ','');
+  
   main = find(strncmp(t, '/', 1));
   if isempty(main)
     main = [ 1 (find(strncmp(t, 'END', 5))-1) ];
@@ -60,12 +63,23 @@ function gphoto_config = gphoto_parse_output(self, message, config)
     % get only lines with ':' (remove END and any other parasitic output)
     block = block(~cellfun(@isempty, strfind(block, ':')));
     block = str2struct(block);
+    block.name = n;
     gphoto_config{end+1} = block;
   end
   
   % create structure when relevant
   if numel(gphoto_config) == numel(config)
-    gphoto_config = cell2struct(gphoto_config, config, 2);
+    try
+      gphoto_config = cell2struct(gphoto_config, config, 2);
+    catch
+      s = struct();
+      for index=1:numel(gphoto_config)
+        if ~isempty(gphoto_config{index}.name)
+          s.(gphoto_config{index}.name) = gphoto_config{index};
+        end
+      end
+      gphoto_config = s;
+    end
   end
 
 % ----------------------------------------------------------------------------
