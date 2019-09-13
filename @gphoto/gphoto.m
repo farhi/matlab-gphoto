@@ -3,18 +3,34 @@ classdef gphoto < handle
   %
   % Usage
   % =====
-  % This class can curently connect to a single DSLR camera via USB and GPhoto2.
+  % This class can currently connect to a single DSLR camera via USB cable and GPhoto2.
   % Basically, type from Matlab:
   % - addpath /path/to/gphoto
-  % - g = gphoto;
-  % - plot(g) 
-  % - image(g)
-  % - get(g)
-  % - set(g, 'iso', 3200);
+  % - g = gphoto;           % start the connection
+  % - plot(g);              % plot the GUI (with basic liveview)
+  % - image(g);             % trigger a capture/shoot
+  % - get(g);               % display all settings
+  % - set(g, 'iso', 3200);  % set the ISO
+  %
+  % You may as well try the simulator mode, which does not require gPhoto, 
+  % nor a camera:
+  % - g = gphoto('sim');
+  %
+  % Then images are read from the gphoto/Images directory by default.
+  %
+  % The Plot Window
+  % ===============
+  % The 'plot' method displays the current camera livewview, at a low refresh rate.
+  % The menus allow to:
+  % - cpature an image
+  % - start/stop a continuous shooting (timelapse)
+  % - change settings
+  % - change storage directory and liveview refresh rate
+  % - display an X mark and focus quality indicator.
   %
   % Installation
   % ============
-  % Get the project archive, which shoud contain a @gphoto and @process directories.
+  % Get the project archive, which should contain a @gphoto and @process directories.
   %
   % Methods
   % =======
@@ -30,7 +46,7 @@ classdef gphoto < handle
   % - identify    identify the connected camera
   % - image       capture an image with current camera settings.
   % - ishold      get the camera status (IDLE, BUSY).
-  % - plot        plot the camera liveview and captured images.
+  % - plot        plot the camera interface, liveview and captured images.
   % - period      set/get plot update periodicity, in seconds.
   % - preview     capture a preview (small) image with current camera settings.
   % - set         set a configuration value.
@@ -48,7 +64,7 @@ classdef gphoto < handle
     lastPreviewFile= '';     % last preview file
     lastPreviewDate= '';     % last preview date
     dir            = pwd;    % the current directory where images are stored
-    verbose        = false;  % gives more I/O output when true
+    verbose        = 0;      % gives more I/O output when 1 or 2
     port           = 'auto'; % how is connected the camera
     version        = '';     % identification of the camera
   end % properties
@@ -115,9 +131,11 @@ classdef gphoto < handle
       preview(self);
       
       % update all settings
-      gphoto_getall(self);
-
-      identify(self);
+      try
+        gphoto_getall(self);
+      catch
+        error([ mfilename ': ERROR: the camera can not be found on port ' self.port ]);
+      end
       
     end % gphoto instantiate
     
@@ -136,8 +154,7 @@ classdef gphoto < handle
         cmd = [ self.executable ' --shell --force-overwrite' ];
         if ~strcmp(self.port,'auto')
           % specify the port
-          cmd = [ cmd ' --port ' port ];
-          self.port = port;
+          cmd = [ cmd ' --port=' self.port ];
         end
         % we start the gphoto shell which is reactive and allows background
         % set, get, capture.
@@ -168,6 +185,7 @@ classdef gphoto < handle
     
     function c = char(self, op)
       % CHAR returns a character representation of the object
+      %   CHAR(s,'long') displays a detailed state with all settings.
       c = { sprintf(' %6s   %s [port: %s] ', self.status, self.version, self.port) };
       if nargin > 1
         f = fieldnames(self.settings);
@@ -211,7 +229,7 @@ classdef gphoto < handle
     
     function get(self, config)
       % GET get the camera configuration
-      %   GET(g) get all configuration states (from cache).
+      %   GET(g) get all configuration states (from cache) as a struct, into 'ans'.
       %
       %   GET(g, config) update the specified configuration from the camera.
       %
@@ -223,7 +241,18 @@ classdef gphoto < handle
       if strcmp(config, 'all')
         gphoto_getall(self);
       elseif isempty(config)
-        disp(char(self, 'long'));
+        f = fieldnames(self.settings);
+        s = struct();
+        for index=1:numel(f)
+          if isfield(self.settings.(f{index}),'Current')
+            val = self.settings.(f{index}).Current;
+            if isnumeric(val), val = val(:)'; end
+            s.(f{index})= val;
+          else
+            s.(f{index})=[];
+          end
+        end
+        ans = s
       elseif isfield(self.settings, config)
         if ~strncmp(self.port, 'sim', 3)
           % we clear the stdout from the process (to get only what is new)
@@ -233,8 +262,7 @@ classdef gphoto < handle
           % register expect action as post_get (to get the value when ready)
           self.expect{end+1} = { 'post_get', self, config };
         else
-          disp(self.settings.(config).Current);
-          ans = self.settings.(config).Current;
+          ans = self.settings.(config).Current
         end
       end
     end % get
@@ -263,6 +291,7 @@ classdef gphoto < handle
         r = ceil(rand*numel(index));
         self.lastImageFile = d(index(r)).name;
         self.lastImageDate = clock;
+        if verbose, disp([ '[' datestr(now) '] ' fullfile(self.dir, self.lastImageFile)]); end
       end
       
     end % image
@@ -299,7 +328,7 @@ classdef gphoto < handle
     end % preview
     
     function dt = period(self, varargin)
-      % PERIOD get or set the gphoto preview rate, in [s].
+      % PERIOD get or set the gphoto preview/continuous rate, in [s].
       %   PERIOD(s, 'gui') displays a dialogue to change the refresh rate.
       
       % special case for d='gui'
@@ -311,7 +340,7 @@ classdef gphoto < handle
       
       dt0 = period(self.proc);
       if ~isempty(varargin) && ischar(varargin{1}) && strcmp(varargin{1}, 'gui')
-        dt = inputdlg('Specify preview rate [s]. Use Inf or 0 to disable liveview.', ...
+        dt = inputdlg('Specify preview/continuous rate [s]. Use Inf or 0 to disable liveview.', ...
           [ mfilename ': Preview rate' ],1,{num2str(dt0)});
         if isempty(dt), return; end
         dt = str2num(dt{1});
@@ -346,7 +375,11 @@ classdef gphoto < handle
     
     function continuous(self, st)
       % CONTINUOUS set or toggle continuous shooting (timelapse)
-      %   CONTINUOUS(s, 'on'|'off'|'toggle') controls continuous shooting
+      %   CONTINUOUS(s, 'on'|'off'|'toggle') controls continuous shooting.
+      %   The capture rate is the same as the liveview. To lower the rate,
+      %   increase the liveview period, e.g.:
+      %     period(s, 10) 
+      %   will take an image every 10s.
       if nargin == 1, st = ''; end
       if ischar(st)
         switch lower(st)
@@ -380,7 +413,7 @@ classdef gphoto < handle
       lines = strread(self.proc.stdout,'%s','delimiter','\n\r');
       if isempty(lines) || isempty(lines{1})
         self.status = 'ERROR';
-        if self.verbose, disp(self.proc.stdout); end
+        if self.verbose > 1, disp(self.proc.stdout); end
         self.UserData.error = self.proc.stdout;
         st = 1;
         return
@@ -392,6 +425,8 @@ classdef gphoto < handle
       elseif ~isempty(lines)
         self.status = 'BUSY'; st = 1;
         notify(self, 'busy');
+      else
+        self.status = 'ERROR'; st=0;
       end
     end % ishold
     
@@ -400,7 +435,7 @@ classdef gphoto < handle
       %   CD(g) get the current directory on the computer where images are stored.
       %
       %   CD(g, d) set the directory used for storing images.
-      if nargin == 1 || strncmp(self.port, 'sim', 3)
+      if nargin == 1
         d = self.dir;
       else
         if ~strcmp(self.status,'IDLE'), return; end
@@ -420,13 +455,17 @@ classdef gphoto < handle
           mkdir(d);
         end
         if ~isdir(d), return; end
-        write(self.proc, sprintf('lcd %s\n', d));
+        if ~strncmp(self.port, 'sim', 3)
+          write(self.proc, sprintf('lcd %s\n', d));
+        end
         self.dir = d;
       end
     end % cd
     
     function about(self)
       % ABOUT display a dialog box showing settings.
+      %   You may as well use set(g) to change settings and char(g,'long') to
+      %   print them.
       c = cellstr(char(self,'long'));
       c{end+1} = [ mfilename ' for Matlab' ];
       c{end+1} = '(c) E. Farhi <https://github.com/farhi/matlab-gphoto>';
@@ -549,7 +588,7 @@ function post_get(self, config)
   
   % update the settings
   message = read(self.proc);
-  if self.verbose, disp(message); end
+  if self.verbose > 1, disp(message); end
   value = gphoto_parse_output(self, message, config); % read result and parse it
   if isstruct(value) && numel(fieldnames(value)) == 1
     value = struct2cell(value);
@@ -557,24 +596,25 @@ function post_get(self, config)
   end
   self.settings.(config) = value;
   disp([ mfilename ': ' config ]);
-  disp(value);
+  ans = value
   
 end % post_get
 
 function post_image(self)
   % images have been written
   message = read(self.proc);
-  if self.verbose, disp(message); end
+  if self.verbose > 1, disp(message); end
   files = gphoto_parse_output(self, message);
   index = find(strcmp('capture_preview.jpg', files));
   if ~isempty(index)
     self.lastPreviewFile = files(index);
     self.lastPreviewDate = clock;
   end
-  index = find(~strcmp('capture_preview.jpg', files));
+  index = find(~strcmp('capture_preview.jpg', files)); % not preview
   if ~isempty(index)
     self.lastImageFile = files(index);
     self.lastImageDate = clock;
+    if verbose, disp([ '[' datestr(now) '] ' fullfile(self.dir, self.lastImageFile{1})]); end
   end
 end % post_image
 
@@ -582,7 +622,7 @@ function post_getconfig(self)
   % list-config has been received. We get the output.
   if strncmp(self.port, 'sim', 3), return; end
   message = read(self.proc);
-  if self.verbose, disp(message); end
+  if self.verbose > 1, disp(message); end
   % get all config fields: they start with '/'
   t = textscan(message, '%s','Delimiter','\n'); % into lines
   t = t{1}; config = {};
@@ -600,7 +640,7 @@ function post_getvalues(self, config)
   % we have sent get-config for all fields. get results into settings...
   if strncmp(self.port, 'sim', 3), return; end
   message = read(self.proc);
-  if self.verbose, disp(message); end
+  if self.verbose > 1, disp(message); end
   self.settings = gphoto_parse_output(self, message);
   identify(self); % update identification string
 end % post_getvalues
