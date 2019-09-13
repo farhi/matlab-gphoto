@@ -7,8 +7,8 @@ classdef gphoto < handle
   % Basically, type from Matlab:
   % - addpath /path/to/gphoto
   % - g = gphoto;
+  % - plot(g) 
   % - image(g)
-  % - preview(g)
   % - get(g)
   % - set(g, 'iso', 3200);
   %
@@ -18,11 +18,16 @@ classdef gphoto < handle
   %
   % Methods
   % =======
+  % - about       display a dialog box showing settings.
   % - cd          change or get current directory where images are stored. 
+  % - char        returns a character representation of the object
   % - continuous  set/toggle continuous shooting (timelapse).
   % - delete      close the Gphoto connection.
+  % - disp        display GPhoto object (details)
+  % - display     display GPhoto object (from command line)
   % - get         get the camera configuration.
   % - grid        set/toggle line markers and focus quality on plot.
+  % - identify    identify the connected camera
   % - image       capture an image with current camera settings.
   % - ishold      get the camera status (IDLE, BUSY).
   % - plot        plot the camera liveview and captured images.
@@ -43,9 +48,9 @@ classdef gphoto < handle
     lastPreviewFile= '';     % last preview file
     lastPreviewDate= '';     % last preview date
     dir            = pwd;    % the current directory where images are stored
-    verbose        = false;
-    port           = 'auto';
-    version        = '';
+    verbose        = false;  % gives more I/O output when true
+    port           = 'auto'; % how is connected the camera
+    version        = '';     % identification of the camera
   end % properties
   
   properties (Access=private)
@@ -84,8 +89,15 @@ classdef gphoto < handle
       
       % we identify the connected cameras
       [cameras,ports] = gphoto_ports(self);
-      if ~nargin && numel(cameras) > 1
-        error([ mfilename ': there are more than one camera connected. Specify the port.' ])
+      if ~isempty(cameras)
+        disp('Connected cameras (gPhoto):');
+        disp('-----------------------------------------------------------')
+        for index=1:numel(cameras)
+          fprintf(1, '%30s %s\n', cameras{index}, ports{index});  
+        end
+        if ~nargin && numel(cameras) > 1
+          error([ mfilename ': there are more than one camera connected. Specify the port.' ])
+        end
       end
       
       % start gphoto shell and initiate view with a preview capture
@@ -152,7 +164,8 @@ classdef gphoto < handle
     function reset(self)
       % RESET reset the camera connection.
       stop(self);
-      
+      gphoto_exec(self, '--reset'); % does not work from shell
+      pause(2);
       start(self);
     end % reset
     
@@ -357,17 +370,14 @@ classdef gphoto < handle
     end % cd
     
     function about(self)
-      % ABOUT 
+      % ABOUT display a dialog box showing settings.
       c = cellstr(char(self,'long'));
       c{end+1} = [ mfilename ' for Matlab' ];
       c{end+1} = '(c) E. Farhi <https://github.com/farhi/matlab-gphoto>';
       listdlg('ListString', c, 'Name', [ mfilename ': About' ], ...
         'ListSize',[ 320 400 ],'SelectionMode','single');
     end % about
-    
-    function help(self)
-    end % help
-    
+
     function waitfor(self)
       % WAITFOR waits for camera to be IDLE
       while ishold(self)
@@ -461,7 +471,7 @@ function CameraWatchFcn(self)
     end
     self.lastPlotDate = clock;
   end
-  set(h, 'Name', [ mfilename ': ' char(self) ]);
+  set(h, 'Name', [ mfilename ': ' strtrim(char(self)) ]);
   
   % Trigger new preview when IDLE or CONTINUOUS
   if ~ishold(self) % 'IDLE'

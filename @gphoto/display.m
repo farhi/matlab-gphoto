@@ -12,7 +12,7 @@ function d = display(s_in, name)
   d = [ sprintf('%s = ',iname) ];
 
   if isdeployed || ~usejava('jvm') || ~usejava('desktop'), id=class(s_in);
-  else           id=[ '<a href="matlab:doc gphoto">gphoto</a> (<a href="matlab:methods gphoto">methods</a>,<a href="matlab:help gphoto">doc</a>,<a href="matlab:plot(' iname ')">plot</a>,<a href="matlab:set(' iname ')">settings</a>,<a href="matlab:disp(' iname ');">more...</a>)' ];
+  else           id=[ '<a href="matlab:doc gphoto">gphoto</a> (<a href="matlab:methods gphoto">methods</a>,<a href="matlab:help gphoto">doc</a>,<a href="matlab:plot(' iname ')">plot</a>,<a href="matlab:get(' iname ')">settings</a>,<a href="matlab:disp(' iname ');">more...</a>)' ];
   end
   
   if length(s_in) == 0

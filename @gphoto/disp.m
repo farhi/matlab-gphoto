@@ -14,11 +14,10 @@ function disp(s_in, name)
   else
 
     if isdeployed || ~usejava('jvm'), id=class(s_in);
-    else           id=[ '<a href="matlab:doc gphoto">gphoto</a> (<a href="matlab:methods gphoto">methods</a>,<a href="matlab:help gphoto">doc</a>,<a href="matlab:plot(' iname ')">plot</a>,<a href="matlab:set(' iname ')">settings</a>)' ];
+    else           id=[ '<a href="matlab:doc gphoto">gphoto</a> (<a href="matlab:methods gphoto">methods</a>,<a href="matlab:help gphoto">doc</a>,<a href="matlab:plot(' iname ')">plot</a>,<a href="matlab:get(' iname ')">settings</a>)' ];
     end
 
-    fprintf(1,'%s = %s object [%s]:\n',iname, id, s_in.status);
-      get(s_in);
+    fprintf(1,'%s = %s object %s:\n',iname, id, strtrim(char(s_in)));
   end
   builtin('disp', s_in);
 
