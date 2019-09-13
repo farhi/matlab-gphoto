@@ -83,17 +83,27 @@ classdef gphoto < handle
       %   'usb:XXX,YYY'         USB cable
       %   'ptpip:XX.YY.ZZ.TT'   PTP over IP
       %   'serial:/dev/ttyXX'   serial port
+      %   'sim'                 simulation mode
 
-      % where is the executable ?
-      self.executable = gphoto_executable;
-      
-      % we identify the connected cameras
-      [cameras,ports] = gphoto_ports(self);
+      if nargin && ischar(varargin{1})
+        self.port = varargin{1};
+      end
+      if ~strncmp(self.port,'sim',3)
+        % where is the executable ?
+        self.executable = gphoto_executable;
+        
+        % we identify the connected cameras
+        [cameras,ports] = gphoto_ports(self);
+      else
+        self.executable = 'gphoto_simulator';
+        cameras = {'Fake camera'}; ports = { 'sim:' };
+        self.dir = fullfile(fileparts(which(mfilename)),'Images');
+      end
       if ~isempty(cameras)
         disp('Connected cameras (gPhoto):');
         disp('-----------------------------------------------------------')
         for index=1:numel(cameras)
-          fprintf(1, '%30s %s\n', cameras{index}, ports{index});  
+          fprintf(1, '%-30s %s\n', cameras{index}, ports{index});  
         end
         if ~nargin && numel(cameras) > 1
           error([ mfilename ': there are more than one camera connected. Specify the port.' ])
@@ -101,20 +111,30 @@ classdef gphoto < handle
       end
       
       % start gphoto shell and initiate view with a preview capture
-      start(self, varargin{:});
+      start(self);
       preview(self);
       
       % update all settings
       gphoto_getall(self);
+
+      identify(self);
       
     end % gphoto instantiate
     
-    function start(self, port)
+    function start(self)
       % START start the background gphoto control
-      if nargin < 2, port = self.port; end
-      if isempty(self.proc) || ~isvalid(self.proc)
+      if strncmp(self.port, 'sim', 3)
+        self.proc = timer( ...
+          'ExecutionMode', 'fixedSpacing', ...
+          'Name', 'gPhoto simulator', ...
+          'UserData', [], ...
+          'Period', 1.0, ...
+          'TimerFcn',@(src,evt)CameraWatchFcn(self));
+        start(self.proc);
+        return;
+      elseif isempty(self.proc) || ~isvalid(self.proc)
         cmd = [ self.executable ' --shell --force-overwrite' ];
-        if nargin > 1 && ~isempty(port) && ischar(port) && ~strcmp(port,'auto')
+        if ~strcmp(self.port,'auto')
           % specify the port
           cmd = [ cmd ' --port ' port ];
           self.port = port;
@@ -127,13 +147,15 @@ classdef gphoto < handle
         
         % attach our CameraWatchFcn to the gphoto shell'update'
         addlistener(self.proc, 'processUpdate', @(src,evt)CameraWatchFcn(self));
-        identify(self);
       end
     end % start
     
     function stop(self)
       % STOP stop the background gphoto control. Restart it with start.
       if ~isempty(self.proc) && isvalid(self.proc)
+        if strncmp(self.port, 'sim', 3)
+          stop(self.proc);
+        end
         delete(self.proc); % stop and kill gphoto shell
       end
       self.proc = [];
@@ -151,8 +173,9 @@ classdef gphoto < handle
         f = fieldnames(self.settings);
         for index=1:numel(f)
           if isfield(self.settings.(f{index}),'Current')
-            c{end+1} = [ '  ' f{index} ': ' ...
-              num2str(self.settings.(f{index}).Current) ];
+            val = self.settings.(f{index}).Current;
+            if isnumeric(val), val = val(:)'; end
+            c{end+1} = [ '  ' f{index} ': ' num2str(val) ];
           else
             c{end+1} = [ '  ' f{index} ];
           end
@@ -183,7 +206,7 @@ classdef gphoto < handle
         end
       end
       self.version = id;
-      disp([ mfilename ': connected to ' id ]);
+      if ~isempty(id) disp([ mfilename ': connected to ' id ]); end
     end % identify
     
     function get(self, config)
@@ -202,17 +225,20 @@ classdef gphoto < handle
       elseif isempty(config)
         disp(char(self, 'long'));
       elseif isfield(self.settings, config)
-        % we clear the stdout from the process (to get only what is new)
-        self.proc.stdout = '';
-        % update value from the camera
-        write(self.proc, sprintf('get-config %s\n', config));
-        % register expect action as post_get (to get the value when ready)
-        self.expect{end+1} = { 'post_get', self, config };
+        if ~strncmp(self.port, 'sim', 3)
+          % we clear the stdout from the process (to get only what is new)
+          self.proc.stdout = '';
+          % update value from the camera
+          write(self.proc, sprintf('get-config %s\n', config));
+          % register expect action as post_get (to get the value when ready)
+          self.expect{end+1} = { 'post_get', self, config };
+        else
+          disp(self.settings.(config).Current);
+          ans = self.settings.(config).Current;
+        end
       end
     end % get
-    
-    
-    
+
     function image(self)
       % IMAGE capture an image with current camera settings
       
@@ -221,13 +247,24 @@ classdef gphoto < handle
         self.expect{end+1} = {'image', self};
         return
       end
+
+      if ~strncmp(self.port, 'sim', 3)
+        % we clear the stdout from the process (to get only what is new)
+        self.proc.stdout = '';
+        write(self.proc, sprintf('capture-image-and-download\n'));
+        notify(self, 'captureStart');
+        % register a post_image (to get image names)
+        self.expect{end+1} = {'post_image', self};
+      else % simulate: we generate an image file
+        % simluation mode: we generate a preview image
+        d = dir(self.dir);
+        index = [ d.isdir ];
+        index = find(~index);
+        r = ceil(rand*numel(index));
+        self.lastImageFile = d(index(r)).name;
+        self.lastImageDate = clock;
+      end
       
-      % we clear the stdout from the process (to get only what is new)
-      self.proc.stdout = '';
-      write(self.proc, sprintf('capture-image-and-download\n'));
-      notify(self, 'captureStart');
-      % register a post_image (to get image names)
-      self.expect{end+1} = {'post_image', self};
     end % image
     
     function capture(self)
@@ -237,24 +274,41 @@ classdef gphoto < handle
     
     function preview(self)
       % PREVIEW capture a preview (small) image with current camera settings
-      
       if ~strcmp(self.status,'IDLE'), return; end
       if ~isempty(dir(fullfile(self.dir,'capture-preview.png')))
         delete(fullfile(self.dir,'capture-preview.png'));
       end
-      % we clear the stdout from the process (to get only what is new)
-      self.proc.stdout = '';
-      write(self.proc, sprintf('capture-preview\n'));
-      % the capture filename is 'capture_preview.jpg'. Just need to wait for it.
-      % the plot window will automatically update its content with the last image 
-      % or preview file.
-      self.expect{end+1} = {'post_image', self};
+      if ~strncmp(self.port, 'sim', 3)
+        % we clear the stdout from the process (to get only what is new)
+        self.proc.stdout = '';
+        write(self.proc, sprintf('capture-preview\n'));
+        % the capture filename is 'capture_preview.jpg'. Just need to wait for it.
+        % the plot window will automatically update its content with the last image 
+        % or preview file.
+        self.expect{end+1} = {'post_image', self};
+      else
+        % simluation mode: we generate a preview image
+        d = dir(self.dir);
+        index = [ d.isdir ];
+        index = find(~index);
+        r = ceil(rand*numel(index));
+        self.lastPreviewFile = d(index(r)).name;
+        self.lastPreviewDate = clock;
+      end
+      
     end % preview
     
     function dt = period(self, varargin)
       % PERIOD get or set the gphoto preview rate, in [s].
+      %   PERIOD(s, 'gui') displays a dialogue to change the refresh rate.
       
       % special case for d='gui'
+
+      if strncmp(self.port, 'sim', 3),
+        self.status = 'IDLE'; st=0;
+        return
+      end
+      
       dt0 = period(self.proc);
       if ~isempty(varargin) && ischar(varargin{1}) && strcmp(varargin{1}, 'gui')
         dt = inputdlg('Specify preview rate [s]. Use Inf or 0 to disable liveview.', ...
@@ -319,6 +373,10 @@ classdef gphoto < handle
       %   st = ISHOLD(s) returns 1 when the camera is BUSY.
       
       % the last line of the shell prompt starts with 'gphoto2:' and ends with '> '
+      if strncmp(self.port, 'sim', 3),
+        self.status = 'IDLE'; st=0;
+        return
+      end
       lines = strread(self.proc.stdout,'%s','delimiter','\n\r');
       if isempty(lines) || isempty(lines{1})
         self.status = 'ERROR';
@@ -334,8 +392,6 @@ classdef gphoto < handle
       elseif ~isempty(lines)
         self.status = 'BUSY'; st = 1;
         notify(self, 'busy');
-      else
-        
       end
     end % ishold
     
@@ -344,7 +400,7 @@ classdef gphoto < handle
       %   CD(g) get the current directory on the computer where images are stored.
       %
       %   CD(g, d) set the directory used for storing images.
-      if nargin == 1
+      if nargin == 1 || strncmp(self.port, 'sim', 3)
         d = self.dir;
       else
         if ~strcmp(self.status,'IDLE'), return; end
@@ -523,7 +579,8 @@ function post_image(self)
 end % post_image
 
 function post_getconfig(self)
-  % list-config has been received. We get the output
+  % list-config has been received. We get the output.
+  if strncmp(self.port, 'sim', 3), return; end
   message = read(self.proc);
   if self.verbose, disp(message); end
   % get all config fields: they start with '/'
@@ -541,8 +598,9 @@ end
 
 function post_getvalues(self, config)
   % we have sent get-config for all fields. get results into settings...
- message = read(self.proc);
- if self.verbose, disp(message); end
- self.settings = gphoto_parse_output(self, message);
- identify(self); % update identification string
+  if strncmp(self.port, 'sim', 3), return; end
+  message = read(self.proc);
+  if self.verbose, disp(message); end
+  self.settings = gphoto_parse_output(self, message);
+  identify(self); % update identification string
 end % post_getvalues

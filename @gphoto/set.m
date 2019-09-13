@@ -18,8 +18,9 @@ function set(self, config, value)
       if isfield(self.settings.(f{index}), 'Readonly') ...
         && ~self.settings.(f{index}).Readonly
         if isfield(self.settings.(f{index}),'Current')
-          settings{end+1} = [ f{index} ' = ' ...
-            num2str(self.settings.(f{index}).Current) ];
+          val = self.settings.(f{index}).Current;
+          if isnumeric(val), val = val(:)'; end
+          settings{end+1} = [ f{index} ' = ' num2str(val) ];
         end
       end
     end
@@ -91,16 +92,22 @@ function set(self, config, value)
     end
   end
   if isempty(value), return; end
+  
   % we clear the stdout from the process (to get only what is new)
-  self.proc.stdout = '';
   if can_use_index && isnumeric(value) && ...
     mod(value,1) == 0 && 0 <= value && value <= numel(choices)
     disp([ class(self) ': set: ' config ' = ' choices{value+1} ' [' num2str(value) ']' ])
-    write(self.proc, sprintf('set-config-index %s=%s\n', config, num2str(value)));
+    if ~strncmp(self.port, 'sim',3)
+      self.proc.stdout = '';
+      write(self.proc, sprintf('set-config-index %s=%s\n', config, num2str(value)));
+    end
     self.settings.(config).Current = choices{value+1};
   else
     disp([ class(self) ': set: ' config ' = ' num2str(value) ])
-    write(self.proc, sprintf('set-config %s=%s\n', config, num2str(value)));
+    if ~strncmp(self.port, 'sim',3)
+      self.proc.stdout = '';
+      write(self.proc, sprintf('set-config %s=%s\n', config, num2str(value)));
+    end
     self.settings.(config).Current = value;
   end
   % update the settings

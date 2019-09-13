@@ -74,7 +74,7 @@ function gphoto_config = gphoto_parse_output(self, message, config)
     catch
       s = struct();
       for index=1:numel(gphoto_config)
-        if ~isempty(gphoto_config{index}.name)
+        if ~isempty(gphoto_config{index}.name) && ~isfield(s, gphoto_config{index}.name)
           s.(gphoto_config{index}.name) = gphoto_config{index};
         end
       end
