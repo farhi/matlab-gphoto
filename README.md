@@ -12,8 +12,10 @@ Basically, type from Matlab:
 - image(g);             % trigger a capture/shoot
 - get(g);               % display all settings
 - set(g, 'iso', 3200);  % set the ISO
+- set(g)                % display a dialogue to change camera settings
 
-You may as well specify a port used for the connection, e.g.:
+You may as well specify a port used for the connection (for instance when 
+using multiple cameras), e.g.:
 - g=gphoto('usb:002,004');
 
 You may as well try the simulator mode, which does not require gPhoto, 
@@ -24,6 +26,8 @@ Then images are read from the gphoto/Images directory by default.
 
 The Plot Window
 ---------------
+[The gPhoto Plot window](@gphoto/doc/gphoto_plot.png)
+[The gPhoto Settings dialogue](@gphoto/doc/gphoto_settings.png)
 The 'plot' method displays the current camera livewview, at a low refresh rate.
 The menus allow to:
 - cpature an image
@@ -82,7 +86,7 @@ You should first install [gPhoto2](http://www.gphoto.org/ "gPhoto"). It exists
 as pre-built packages for Debian and RedHat type Linux systems, e.g.:
 - sudo apt install gphoto2
 
-Then, tet the project archive, which should contain a @gphoto and @process 
+Then, extract the project archive, which should contain a @gphoto and @process 
 directories. Then, add its path into Matlab:
 - addpath /path/to/gphoto
 
