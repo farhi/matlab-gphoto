@@ -46,6 +46,7 @@ classdef process < handle
   %
   % You can also monitor the process termination with:
   %   addlistener(pid, 'processEnded', @(src,evt)disp('process just end'))
+  % Known events are: processStarted, processEnded, processUpdate.
   %
   % methods to monitor Processes
   %   disp(pid)     display full process information.
