@@ -4,7 +4,7 @@ classdef gphoto < handle
   %
   % Usage
   % -----
-  % This class can currently connect to a single DSLR camera via USB cable and GPhoto2.
+  % This class can currently connect to DSLR cameras via USB cable and GPhoto2.
   % Basically, type from Matlab:
   % - addpath /path/to/gphoto
   % - g = gphoto;           % start the connection
@@ -12,8 +12,10 @@ classdef gphoto < handle
   % - image(g);             % trigger a capture/shoot
   % - get(g);               % display all settings
   % - set(g, 'iso', 3200);  % set the ISO
+  % - set(g)                % display a dialogue to change camera settings
   %
-  % You may as well specify a port used for the connection, e.g.:
+  % You may as well specify a port used for the connection (for instance when 
+  % using multiple cameras), e.g.:
   % - g=gphoto('usb:002,004');
   %
   % You may as well try the simulator mode, which does not require gPhoto, 
@@ -326,7 +328,7 @@ classdef gphoto < handle
         r = ceil(rand*numel(index));
         self.lastImageFile = d(index(r)).name;
         self.lastImageDate = clock;
-        if verbose, disp([ '[' datestr(now) '] ' fullfile(self.dir, self.lastImageFile)]); end
+        if self.verbose, disp([ '[' datestr(now) '] ' fullfile(self.dir, self.lastImageFile)]); end
       end
       
     end % image
@@ -367,13 +369,12 @@ classdef gphoto < handle
       %   PERIOD(s, 'gui') displays a dialogue to change the refresh rate.
       
       % special case for d='gui'
-
-      if strncmp(self.port, 'sim', 3),
-        self.status = 'IDLE'; st=0;
-        return
-      end
       
-      dt0 = period(self.proc);
+      if strncmp(self.port, 'sim', 3)
+        dt0 = get(self.proc, 'period');
+      else
+        dt0 = period(self.proc);
+      end
       if ~isempty(varargin) && ischar(varargin{1}) && strcmp(varargin{1}, 'gui')
         dt = inputdlg('Specify preview/continuous rate [s]. Use Inf or 0 to disable liveview.', ...
           [ mfilename ': Preview rate' ],1,{num2str(dt0)});
@@ -382,12 +383,23 @@ classdef gphoto < handle
         if isnan(dt), return; end
         if dt <= 0, dt = Inf; end
         varargin{1} = dt;
+      elseif ~isempty(varargin) && isnumeric(varargin{1})
+        dt = varargin{1};
+      else dt = dt0;
       end
 
-      if dt < dt0
-        dt = period(self.proc, dt); % this controls the background proc
-      elseif dt > 1 && dt0 < 1
-        period(self.proc, 1);
+      if 0.1 < dt && dt < dt0
+        if strncmp(self.port, 'sim', 3)
+          set(self.proc, 'Period', dt);
+        else
+          dt = period(self.proc, dt); % faster gphoto shell background proc
+        end
+      elseif 1 < dt && dt0 < 1
+        if strncmp(self.port, 'sim', 3)
+          set(self.proc, 'Period', 1);
+        else
+          period(self.proc, 1); % keep 1s reresh rate for external gphoto shell
+        end
       end
       self.period_preview = dt;
     end % period
@@ -444,7 +456,7 @@ classdef gphoto < handle
       %   st = ISHOLD(s) returns 1 when the camera is BUSY.
       
       % the last line of the shell prompt starts with 'gphoto2:' and ends with '> '
-      if strncmp(self.port, 'sim', 3),
+      if strncmp(self.port, 'sim', 3)
         self.status = 'IDLE'; st=0;
         return
       end
@@ -652,7 +664,7 @@ function post_image(self)
   if ~isempty(index)
     self.lastImageFile = files(index);
     self.lastImageDate = clock;
-    if verbose, disp([ '[' datestr(now) '] ' fullfile(self.dir, self.lastImageFile{1})]); end
+    if self.verbose, disp([ '[' datestr(now) '] ' fullfile(self.dir, self.lastImageFile{1})]); end
   end
 end % post_image
 
