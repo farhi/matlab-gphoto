@@ -1,0 +1,631 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <meta content="text/html; charset=windows-1252"
+      http-equiv="content-type">
+    <title>Empty Web Page</title>
+  </head>
+  <body>
+    <meta http-equiv="content-type" content="text/html;
+      charset=windows-1252">
+    <h1 style="box-sizing: border-box; font-size: 2em; margin-top: 0px
+      !important; margin-right: 0px; margin-bottom: 16px; margin-left:
+      0px; font-weight: 600; line-height: 1.25; padding-bottom: 0.3em;
+      border-bottom: 1px solid rgb(234, 236, 239); color: rgb(36, 41,
+      46); font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe
+      UI&quot;, Helvetica, Arial, sans-serif, &quot;Apple Color
+      Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI
+      Symbol&quot;; font-style: normal; font-variant-ligatures: normal;
+      font-variant-caps: normal; letter-spacing: normal; orphans: 2;
+      text-align: start; text-indent: 0px; text-transform: none;
+      white-space: normal; widows: 2; word-spacing: 0px;
+      -webkit-text-stroke-width: 0px; background-color: rgb(255, 255,
+      255); text-decoration-style: initial; text-decoration-color:
+      initial;">matlab-gphoto</h1>
+    <p>version 19.09. Github:
+      <meta http-equiv="content-type" content="text/html;
+        charset=windows-1252">
+      <a href="https://github.com/farhi/matlab-gphoto">https://github.com/farhi/matlab-gphoto</a></p>
+    <h1 style="box-sizing: border-box; font-size: 2em; margin: 24px 0px
+      16px; font-weight: 600; line-height: 1.25; padding-bottom: 0.3em;
+      border-bottom: 1px solid rgb(234, 236, 239); color: rgb(36, 41,
+      46); font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe
+      UI&quot;, Helvetica, Arial, sans-serif, &quot;Apple Color
+      Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI
+      Symbol&quot;; font-style: normal; font-variant-ligatures: normal;
+      font-variant-caps: normal; letter-spacing: normal; orphans: 2;
+      text-align: start; text-indent: 0px; text-transform: none;
+      white-space: normal; widows: 2; word-spacing: 0px;
+      -webkit-text-stroke-width: 0px; background-color: rgb(255, 255,
+      255); text-decoration-style: initial; text-decoration-color:
+      initial;"><a
+id="user-content-gphoto-a-class-to-control-dslr-camera-handled-by-gphoto"
+        class="anchor" aria-hidden="true"
+href="https://github.com/farhi/matlab-gphoto#gphoto-a-class-to-control-dslr-camera-handled-by-gphoto"
+        style="box-sizing: border-box; background-color: initial; color:
+        rgb(3, 102, 214); text-decoration: none; float: left;
+        padding-right: 4px; margin-left: -20px; line-height: 1;"><svg
+          class="octicon octicon-link" viewBox="0 0 16 16" version="1.1"
+          width="16" height="16" aria-hidden="true"><path
+            fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3
+            4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2
+            3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98
+            0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12
+            13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64
+            1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9
+            13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>GPHOTO
+      A class to control DSLR camera handled by gPhoto.</h1>
+    <p style="box-sizing: border-box; margin-top: 0px; margin-bottom:
+      16px; color: rgb(36, 41, 46); font-family: -apple-system,
+      BlinkMacSystemFont, &quot;Segoe UI&quot;, Helvetica, Arial,
+      sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI
+      Emoji&quot;, &quot;Segoe UI Symbol&quot;; font-size: 16px;
+      font-style: normal; font-variant-ligatures: normal;
+      font-variant-caps: normal; font-weight: 400; letter-spacing:
+      normal; orphans: 2; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; widows: 2;
+      word-spacing: 0px; -webkit-text-stroke-width: 0px;
+      background-color: rgb(255, 255, 255); text-decoration-style:
+      initial; text-decoration-color: initial;" align="center"><a
+        target="_blank" rel="noopener noreferrer"
+href="https://github.com/farhi/matlab-gphoto/blob/master/@gphoto/doc/gphoto_plot.png"
+        style="box-sizing: border-box; background-color: initial; color:
+        rgb(3, 102, 214); text-decoration: none;"><img
+          src="gphoto_plot.png" alt="The gPhoto Plot window"
+          title="plot(g)" style="box-sizing: initial; border-style:
+          none; max-width: 100%; background-color: rgb(255, 255, 255);"
+          border="0" align="right" height="368" width="307"></a></p>
+    <h2 style="box-sizing: border-box; margin-top: 24px; margin-bottom:
+      16px; font-weight: 600; font-size: 1.5em; line-height: 1.25;
+      padding-bottom: 0.3em; border-bottom: 1px solid rgb(234, 236,
+      239); color: rgb(36, 41, 46); font-family: -apple-system,
+      BlinkMacSystemFont, &quot;Segoe UI&quot;, Helvetica, Arial,
+      sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI
+      Emoji&quot;, &quot;Segoe UI Symbol&quot;; font-style: normal;
+      font-variant-ligatures: normal; font-variant-caps: normal;
+      letter-spacing: normal; orphans: 2; text-align: start;
+      text-indent: 0px; text-transform: none; white-space: normal;
+      widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px;
+      background-color: rgb(255, 255, 255); text-decoration-style:
+      initial; text-decoration-color: initial;"><a
+        id="user-content-usage" class="anchor" aria-hidden="true"
+        href="https://github.com/farhi/matlab-gphoto#usage"
+        style="box-sizing: border-box; background-color: initial; color:
+        rgb(3, 102, 214); text-decoration: none; float: left;
+        padding-right: 4px; margin-left: -20px; line-height: 1;"><svg
+          class="octicon octicon-link" viewBox="0 0 16 16" version="1.1"
+          width="16" height="16" aria-hidden="true"><path
+            fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3
+            4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2
+            3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98
+            0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12
+            13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64
+            1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9
+            13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Usage</h2>
+    <p style="box-sizing: border-box; margin-top: 0px; margin-bottom:
+      16px; color: rgb(36, 41, 46); font-family: -apple-system,
+      BlinkMacSystemFont, &quot;Segoe UI&quot;, Helvetica, Arial,
+      sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI
+      Emoji&quot;, &quot;Segoe UI Symbol&quot;; font-size: 16px;
+      font-style: normal; font-variant-ligatures: normal;
+      font-variant-caps: normal; font-weight: 400; letter-spacing:
+      normal; orphans: 2; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; widows: 2;
+      word-spacing: 0px; -webkit-text-stroke-width: 0px;
+      background-color: rgb(255, 255, 255); text-decoration-style:
+      initial; text-decoration-color: initial;">This class can currently
+      connect to a single DSLR camera via USB cable and GPhoto2.
+      Basically, type from Matlab:</p>
+    <div class="highlight highlight-source-matlab" style="box-sizing:
+      border-box; margin-bottom: 16px; color: rgb(36, 41, 46);
+      font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe
+      UI&quot;, Helvetica, Arial, sans-serif, &quot;Apple Color
+      Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI
+      Symbol&quot;; font-size: 16px; font-style: normal;
+      font-variant-ligatures: normal; font-variant-caps: normal;
+      font-weight: 400; letter-spacing: normal; orphans: 2; text-align:
+      start; text-indent: 0px; text-transform: none; white-space:
+      normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width:
+      0px; background-color: rgb(255, 255, 255); text-decoration-style:
+      initial; text-decoration-color: initial;">
+      <pre style="box-sizing: border-box; font-family: SFMono-Regular, Consolas, &quot;Liberation Mono&quot;, Menlo, monospace; font-size: 13.6px; margin-top: 0px; margin-bottom: 0px; overflow-wrap: normal; padding: 16px; overflow: auto; line-height: 1.45; background-color: rgb(246, 248, 250); border-radius: 3px; word-break: normal;"><span class="pl-s" style="box-sizing: border-box; color: rgb(3, 47, 98);"><span class="pl-smi" style="box-sizing: border-box; color: rgb(36, 41, 46);">addpath</span> /path/to/gphoto</span>
+g = gphoto;           <span class="pl-c" style="box-sizing: border-box; color: rgb(106, 115, 125);"><span class="pl-c" style="box-sizing: border-box; color: rgb(106, 115, 125);">%</span> start the connection</span>
+plot(g);              <span class="pl-c" style="box-sizing: border-box; color: rgb(106, 115, 125);"><span class="pl-c" style="box-sizing: border-box; color: rgb(106, 115, 125);">%</span> plot the GUI (with basic liveview)</span>
+image(g);             <span class="pl-c" style="box-sizing: border-box; color: rgb(106, 115, 125);"><span class="pl-c" style="box-sizing: border-box; color: rgb(106, 115, 125);">%</span> trigger a capture/shoot</span>
+get(g);               <span class="pl-c" style="box-sizing: border-box; color: rgb(106, 115, 125);"><span class="pl-c" style="box-sizing: border-box; color: rgb(106, 115, 125);">%</span> display all settings</span>
+set(g, <span class="pl-s" style="box-sizing: border-box; color: rgb(3, 47, 98);"><span class="pl-pds" style="box-sizing: border-box; color: rgb(3, 47, 98);">'</span>iso<span class="pl-pds" style="box-sizing: border-box; color: rgb(3, 47, 98);">'</span></span>, <span class="pl-c1" style="box-sizing: border-box; color: rgb(0, 92, 197);">3200</span>);  <span class="pl-c" style="box-sizing: border-box; color: rgb(106, 115, 125);"><span class="pl-c" style="box-sizing: border-box; color: rgb(106, 115, 125);">%</span> set the ISO</span>
+set(g)                <span class="pl-c" style="box-sizing: border-box; color: rgb(106, 115, 125);"><span class="pl-c" style="box-sizing: border-box; color: rgb(106, 115, 125);">%</span> display a dialogue to change camera settings</span></pre>
+    </div>
+    <p style="box-sizing: border-box; margin-top: 0px; margin-bottom:
+      16px; color: rgb(36, 41, 46); font-family: -apple-system,
+      BlinkMacSystemFont, &quot;Segoe UI&quot;, Helvetica, Arial,
+      sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI
+      Emoji&quot;, &quot;Segoe UI Symbol&quot;; font-size: 16px;
+      font-style: normal; font-variant-ligatures: normal;
+      font-variant-caps: normal; font-weight: 400; letter-spacing:
+      normal; orphans: 2; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; widows: 2;
+      word-spacing: 0px; -webkit-text-stroke-width: 0px;
+      background-color: rgb(255, 255, 255); text-decoration-style:
+      initial; text-decoration-color: initial;">You may as well specify
+      a port used for the connection (for instance when using multiple
+      cameras), e.g.:</p>
+    <div class="highlight highlight-source-matlab" style="box-sizing:
+      border-box; margin-bottom: 16px; color: rgb(36, 41, 46);
+      font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe
+      UI&quot;, Helvetica, Arial, sans-serif, &quot;Apple Color
+      Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI
+      Symbol&quot;; font-size: 16px; font-style: normal;
+      font-variant-ligatures: normal; font-variant-caps: normal;
+      font-weight: 400; letter-spacing: normal; orphans: 2; text-align:
+      start; text-indent: 0px; text-transform: none; white-space:
+      normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width:
+      0px; background-color: rgb(255, 255, 255); text-decoration-style:
+      initial; text-decoration-color: initial;">
+      <pre style="box-sizing: border-box; font-family: SFMono-Regular, Consolas, &quot;Liberation Mono&quot;, Menlo, monospace; font-size: 13.6px; margin-top: 0px; margin-bottom: 0px; overflow-wrap: normal; padding: 16px; overflow: auto; line-height: 1.45; background-color: rgb(246, 248, 250); border-radius: 3px; word-break: normal;">g=gphoto(<span class="pl-s" style="box-sizing: border-box; color: rgb(3, 47, 98);"><span class="pl-pds" style="box-sizing: border-box; color: rgb(3, 47, 98);">'</span>usb:002,004<span class="pl-pds" style="box-sizing: border-box; color: rgb(3, 47, 98);">'</span></span>);</pre>
+    </div>
+    <p style="box-sizing: border-box; margin-top: 0px; margin-bottom:
+      16px; color: rgb(36, 41, 46); font-family: -apple-system,
+      BlinkMacSystemFont, &quot;Segoe UI&quot;, Helvetica, Arial,
+      sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI
+      Emoji&quot;, &quot;Segoe UI Symbol&quot;; font-size: 16px;
+      font-style: normal; font-variant-ligatures: normal;
+      font-variant-caps: normal; font-weight: 400; letter-spacing:
+      normal; orphans: 2; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; widows: 2;
+      word-spacing: 0px; -webkit-text-stroke-width: 0px;
+      background-color: rgb(255, 255, 255); text-decoration-style:
+      initial; text-decoration-color: initial;">You may as well try the
+      simulator mode, which does not require gPhoto, nor a camera. Then,
+      images are read from the gphoto/Images directory by default.</p>
+    <div class="highlight highlight-source-matlab" style="box-sizing:
+      border-box; margin-bottom: 16px; color: rgb(36, 41, 46);
+      font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe
+      UI&quot;, Helvetica, Arial, sans-serif, &quot;Apple Color
+      Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI
+      Symbol&quot;; font-size: 16px; font-style: normal;
+      font-variant-ligatures: normal; font-variant-caps: normal;
+      font-weight: 400; letter-spacing: normal; orphans: 2; text-align:
+      start; text-indent: 0px; text-transform: none; white-space:
+      normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width:
+      0px; background-color: rgb(255, 255, 255); text-decoration-style:
+      initial; text-decoration-color: initial;">
+      <pre style="box-sizing: border-box; font-family: SFMono-Regular, Consolas, &quot;Liberation Mono&quot;, Menlo, monospace; font-size: 13.6px; margin-top: 0px; margin-bottom: 0px; overflow-wrap: normal; padding: 16px; overflow: auto; line-height: 1.45; background-color: rgb(246, 248, 250); border-radius: 3px; word-break: normal;">g = gphoto(<span class="pl-s" style="box-sizing: border-box; color: rgb(3, 47, 98);"><span class="pl-pds" style="box-sizing: border-box; color: rgb(3, 47, 98);">'</span>sim<span class="pl-pds" style="box-sizing: border-box; color: rgb(3, 47, 98);">'</span></span>);</pre>
+    </div>
+    <p style="box-sizing: border-box; margin-top: 0px; margin-bottom:
+      16px; color: rgb(36, 41, 46); font-family: -apple-system,
+      BlinkMacSystemFont, &quot;Segoe UI&quot;, Helvetica, Arial,
+      sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI
+      Emoji&quot;, &quot;Segoe UI Symbol&quot;; font-size: 16px;
+      font-style: normal; font-variant-ligatures: normal;
+      font-variant-caps: normal; font-weight: 400; letter-spacing:
+      normal; orphans: 2; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; widows: 2;
+      word-spacing: 0px; -webkit-text-stroke-width: 0px;
+      background-color: rgb(255, 255, 255); text-decoration-style:
+      initial; text-decoration-color: initial;">Then images are read
+      from the gphoto/Images directory by default.</p>
+    <h2 style="box-sizing: border-box; margin-top: 24px; margin-bottom:
+      16px; font-weight: 600; font-size: 1.5em; line-height: 1.25;
+      padding-bottom: 0.3em; border-bottom: 1px solid rgb(234, 236,
+      239); color: rgb(36, 41, 46); font-family: -apple-system,
+      BlinkMacSystemFont, &quot;Segoe UI&quot;, Helvetica, Arial,
+      sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI
+      Emoji&quot;, &quot;Segoe UI Symbol&quot;; font-style: normal;
+      font-variant-ligatures: normal; font-variant-caps: normal;
+      letter-spacing: normal; orphans: 2; text-align: start;
+      text-indent: 0px; text-transform: none; white-space: normal;
+      widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px;
+      background-color: rgb(255, 255, 255); text-decoration-style:
+      initial; text-decoration-color: initial;"><a
+        id="user-content-the-plot-window" class="anchor"
+        aria-hidden="true"
+        href="https://github.com/farhi/matlab-gphoto#the-plot-window"
+        style="box-sizing: border-box; background-color: initial; color:
+        rgb(3, 102, 214); text-decoration: none; float: left;
+        padding-right: 4px; margin-left: -20px; line-height: 1;"><svg
+          class="octicon octicon-link" viewBox="0 0 16 16" version="1.1"
+          width="16" height="16" aria-hidden="true"><path
+            fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3
+            4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2
+            3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98
+            0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12
+            13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64
+            1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9
+            13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>The
+      Plot Window</h2>
+    <p style="box-sizing: border-box; margin-top: 0px; margin-bottom:
+      16px; color: rgb(36, 41, 46); font-family: -apple-system,
+      BlinkMacSystemFont, &quot;Segoe UI&quot;, Helvetica, Arial,
+      sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI
+      Emoji&quot;, &quot;Segoe UI Symbol&quot;; font-size: 16px;
+      font-style: normal; font-variant-ligatures: normal;
+      font-variant-caps: normal; font-weight: 400; letter-spacing:
+      normal; orphans: 2; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; widows: 2;
+      word-spacing: 0px; -webkit-text-stroke-width: 0px;
+      background-color: rgb(255, 255, 255); text-decoration-style:
+      initial; text-decoration-color: initial;">The 'plot' method
+      displays the current camera livewview, at a low refresh rate. The
+      menus allow to:</p>
+    <ul style="box-sizing: border-box; padding-left: 2em; margin-top:
+      0px; margin-bottom: 16px; color: rgb(36, 41, 46); font-family:
+      -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;,
+      Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;,
+      &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;;
+      font-size: 16px; font-style: normal; font-variant-ligatures:
+      normal; font-variant-caps: normal; font-weight: 400;
+      letter-spacing: normal; orphans: 2; text-align: start;
+      text-indent: 0px; text-transform: none; white-space: normal;
+      widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px;
+      background-color: rgb(255, 255, 255); text-decoration-style:
+      initial; text-decoration-color: initial;">
+      <li style="box-sizing: border-box;">capture an image</li>
+      <li style="box-sizing: border-box; margin-top: 0.25em;">start/stop
+        a continuous capture (timelapse)</li>
+      <li style="box-sizing: border-box; margin-top: 0.25em;">change
+        settings</li>
+      <li style="box-sizing: border-box; margin-top: 0.25em;">change
+        storage directory and liveview refresh rate</li>
+      <li style="box-sizing: border-box; margin-top: 0.25em;">display an
+        X mark and focus quality indicator.</li>
+    </ul>
+    <p style="box-sizing: border-box; margin-top: 0px; margin-bottom:
+      16px; color: rgb(36, 41, 46); font-family: -apple-system,
+      BlinkMacSystemFont, &quot;Segoe UI&quot;, Helvetica, Arial,
+      sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI
+      Emoji&quot;, &quot;Segoe UI Symbol&quot;; font-size: 16px;
+      font-style: normal; font-variant-ligatures: normal;
+      font-variant-caps: normal; font-weight: 400; letter-spacing:
+      normal; orphans: 2; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; widows: 2;
+      word-spacing: 0px; -webkit-text-stroke-width: 0px;
+      background-color: rgb(255, 255, 255); text-decoration-style:
+      initial; text-decoration-color: initial;"><a target="_blank"
+        rel="noopener noreferrer"
+href="https://github.com/farhi/matlab-gphoto/blob/master/@gphoto/doc/gphoto_settings.png"
+        style="box-sizing: border-box; background-color: initial; color:
+        rgb(3, 102, 214); text-decoration: none;"><img
+          src="gphoto_settings.png" alt="The gPhoto Settings dialogue"
+          title="set(g)" style="box-sizing: initial; border-style: none;
+          max-width: 100%; background-color: rgb(255, 255, 255);"
+          border="0" align="right" height="372" width="242"></a></p>
+    <h2 style="box-sizing: border-box; margin-top: 24px; margin-bottom:
+      16px; font-weight: 600; font-size: 1.5em; line-height: 1.25;
+      padding-bottom: 0.3em; border-bottom: 1px solid rgb(234, 236,
+      239); color: rgb(36, 41, 46); font-family: -apple-system,
+      BlinkMacSystemFont, &quot;Segoe UI&quot;, Helvetica, Arial,
+      sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI
+      Emoji&quot;, &quot;Segoe UI Symbol&quot;; font-style: normal;
+      font-variant-ligatures: normal; font-variant-caps: normal;
+      letter-spacing: normal; orphans: 2; text-align: start;
+      text-indent: 0px; text-transform: none; white-space: normal;
+      widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px;
+      background-color: rgb(255, 255, 255); text-decoration-style:
+      initial; text-decoration-color: initial;"><a
+        id="user-content-time-lapsecontinuous-capture" class="anchor"
+        aria-hidden="true"
+href="https://github.com/farhi/matlab-gphoto#time-lapsecontinuous-capture"
+        style="box-sizing: border-box; background-color: initial; color:
+        rgb(3, 102, 214); text-decoration: none; float: left;
+        padding-right: 4px; margin-left: -20px; line-height: 1;"><svg
+          class="octicon octicon-link" viewBox="0 0 16 16" version="1.1"
+          width="16" height="16" aria-hidden="true"><path
+            fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3
+            4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2
+            3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98
+            0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12
+            13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64
+            1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9
+            13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Time-lapse/continuous
+      capture</h2>
+    <p style="box-sizing: border-box; margin-top: 0px; margin-bottom:
+      16px; color: rgb(36, 41, 46); font-family: -apple-system,
+      BlinkMacSystemFont, &quot;Segoe UI&quot;, Helvetica, Arial,
+      sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI
+      Emoji&quot;, &quot;Segoe UI Symbol&quot;; font-size: 16px;
+      font-style: normal; font-variant-ligatures: normal;
+      font-variant-caps: normal; font-weight: 400; letter-spacing:
+      normal; orphans: 2; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; widows: 2;
+      word-spacing: 0px; -webkit-text-stroke-width: 0px;
+      background-color: rgb(255, 255, 255); text-decoration-style:
+      initial; text-decoration-color: initial;">The 'continuous' method
+      and the similar menu item in the plot window allow to start/stop a
+      periodic capture. The current camera settings are used. When the
+      livewview refresh rate is smaller than the acquisition shutter
+      time the images are capture as soon as possible, with minimal
+      waitings.</p>
+    <div class="highlight highlight-source-matlab" style="box-sizing:
+      border-box; margin-bottom: 16px; color: rgb(36, 41, 46);
+      font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe
+      UI&quot;, Helvetica, Arial, sans-serif, &quot;Apple Color
+      Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI
+      Symbol&quot;; font-size: 16px; font-style: normal;
+      font-variant-ligatures: normal; font-variant-caps: normal;
+      font-weight: 400; letter-spacing: normal; orphans: 2; text-align:
+      start; text-indent: 0px; text-transform: none; white-space:
+      normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width:
+      0px; background-color: rgb(255, 255, 255); text-decoration-style:
+      initial; text-decoration-color: initial;">
+      <pre style="box-sizing: border-box; font-family: SFMono-Regular, Consolas, &quot;Liberation Mono&quot;, Menlo, monospace; font-size: 13.6px; margin-top: 0px; margin-bottom: 0px; overflow-wrap: normal; padding: 16px; overflow: auto; line-height: 1.45; background-color: rgb(246, 248, 250); border-radius: 3px; word-break: normal;">period(g, <span class="pl-c1" style="box-sizing: border-box; color: rgb(0, 92, 197);">0.5</span>);
+continuous(g,<span class="pl-s" style="box-sizing: border-box; color: rgb(3, 47, 98);"><span class="pl-pds" style="box-sizing: border-box; color: rgb(3, 47, 98);">'</span>on<span class="pl-pds" style="box-sizing: border-box; color: rgb(3, 47, 98);">'</span></span>); <span class="pl-c" style="box-sizing: border-box; color: rgb(106, 115, 125);"><span class="pl-c" style="box-sizing: border-box; color: rgb(106, 115, 125);">%</span> start time-lapse, capture asap (0.5 s).</span>
+<span class="pl-k" style="box-sizing: border-box; color: rgb(215, 58, 73);">...</span>
+continuous(g, <span class="pl-s" style="box-sizing: border-box; color: rgb(3, 47, 98);"><span class="pl-pds" style="box-sizing: border-box; color: rgb(3, 47, 98);">'</span>off<span class="pl-pds" style="box-sizing: border-box; color: rgb(3, 47, 98);">'</span></span>);</pre>
+    </div>
+    <p style="box-sizing: border-box; margin-top: 0px; margin-bottom:
+      16px; color: rgb(36, 41, 46); font-family: -apple-system,
+      BlinkMacSystemFont, &quot;Segoe UI&quot;, Helvetica, Arial,
+      sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI
+      Emoji&quot;, &quot;Segoe UI Symbol&quot;; font-size: 16px;
+      font-style: normal; font-variant-ligatures: normal;
+      font-variant-caps: normal; font-weight: 400; letter-spacing:
+      normal; orphans: 2; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; widows: 2;
+      word-spacing: 0px; -webkit-text-stroke-width: 0px;
+      background-color: rgb(255, 255, 255); text-decoration-style:
+      initial; text-decoration-color: initial;">When the refresh rate is
+      larger than the shutter time, the next image is captured is
+      synchronized with it.</p>
+    <div class="highlight highlight-source-matlab" style="box-sizing:
+      border-box; margin-bottom: 16px; color: rgb(36, 41, 46);
+      font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe
+      UI&quot;, Helvetica, Arial, sans-serif, &quot;Apple Color
+      Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI
+      Symbol&quot;; font-size: 16px; font-style: normal;
+      font-variant-ligatures: normal; font-variant-caps: normal;
+      font-weight: 400; letter-spacing: normal; orphans: 2; text-align:
+      start; text-indent: 0px; text-transform: none; white-space:
+      normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width:
+      0px; background-color: rgb(255, 255, 255); text-decoration-style:
+      initial; text-decoration-color: initial;">
+      <pre style="box-sizing: border-box; font-family: SFMono-Regular, Consolas, &quot;Liberation Mono&quot;, Menlo, monospace; font-size: 13.6px; margin-top: 0px; margin-bottom: 0px; overflow-wrap: normal; padding: 16px; overflow: auto; line-height: 1.45; background-color: rgb(246, 248, 250); border-radius: 3px; word-break: normal;">period(g, <span class="pl-c1" style="box-sizing: border-box; color: rgb(0, 92, 197);">15</span>);
+continuous(g,<span class="pl-s" style="box-sizing: border-box; color: rgb(3, 47, 98);"><span class="pl-pds" style="box-sizing: border-box; color: rgb(3, 47, 98);">'</span>on<span class="pl-pds" style="box-sizing: border-box; color: rgb(3, 47, 98);">'</span></span>); <span class="pl-c" style="box-sizing: border-box; color: rgb(106, 115, 125);"><span class="pl-c" style="box-sizing: border-box; color: rgb(106, 115, 125);">%</span> start time-lapse, capture every 15 seconds.</span></pre>
+    </div>
+    <h2 style="box-sizing: border-box; margin-top: 24px; margin-bottom:
+      16px; font-weight: 600; font-size: 1.5em; line-height: 1.25;
+      padding-bottom: 0.3em; border-bottom: 1px solid rgb(234, 236,
+      239); color: rgb(36, 41, 46); font-family: -apple-system,
+      BlinkMacSystemFont, &quot;Segoe UI&quot;, Helvetica, Arial,
+      sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI
+      Emoji&quot;, &quot;Segoe UI Symbol&quot;; font-style: normal;
+      font-variant-ligatures: normal; font-variant-caps: normal;
+      letter-spacing: normal; orphans: 2; text-align: start;
+      text-indent: 0px; text-transform: none; white-space: normal;
+      widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px;
+      background-color: rgb(255, 255, 255); text-decoration-style:
+      initial; text-decoration-color: initial;"><a
+        id="user-content-trigger-action-on-event" class="anchor"
+        aria-hidden="true"
+        href="https://github.com/farhi/matlab-gphoto#trigger-action-on-event"
+        style="box-sizing: border-box; background-color: initial; color:
+        rgb(3, 102, 214); text-decoration: none; float: left;
+        padding-right: 4px; margin-left: -20px; line-height: 1;"><svg
+          class="octicon octicon-link" viewBox="0 0 16 16" version="1.1"
+          width="16" height="16" aria-hidden="true"><path
+            fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3
+            4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2
+            3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98
+            0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12
+            13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64
+            1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9
+            13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Trigger
+      action on event</h2>
+    <p style="box-sizing: border-box; margin-top: 0px; margin-bottom:
+      16px; color: rgb(36, 41, 46); font-family: -apple-system,
+      BlinkMacSystemFont, &quot;Segoe UI&quot;, Helvetica, Arial,
+      sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI
+      Emoji&quot;, &quot;Segoe UI Symbol&quot;; font-size: 16px;
+      font-style: normal; font-variant-ligatures: normal;
+      font-variant-caps: normal; font-weight: 400; letter-spacing:
+      normal; orphans: 2; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; widows: 2;
+      word-spacing: 0px; -webkit-text-stroke-width: 0px;
+      background-color: rgb(255, 255, 255); text-decoration-style:
+      initial; text-decoration-color: initial;">You may attach an action
+      to a specific gPhoto event, e.g.:</p>
+    <div class="highlight highlight-source-matlab" style="box-sizing:
+      border-box; margin-bottom: 16px; color: rgb(36, 41, 46);
+      font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe
+      UI&quot;, Helvetica, Arial, sans-serif, &quot;Apple Color
+      Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI
+      Symbol&quot;; font-size: 16px; font-style: normal;
+      font-variant-ligatures: normal; font-variant-caps: normal;
+      font-weight: 400; letter-spacing: normal; orphans: 2; text-align:
+      start; text-indent: 0px; text-transform: none; white-space:
+      normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width:
+      0px; background-color: rgb(255, 255, 255); text-decoration-style:
+      initial; text-decoration-color: initial;">
+      <pre style="box-sizing: border-box; font-family: SFMono-Regular, Consolas, &quot;Liberation Mono&quot;, Menlo, monospace; font-size: 13.6px; margin-top: 0px; margin-bottom: 0px; overflow-wrap: normal; padding: 16px; overflow: auto; line-height: 1.45; background-color: rgb(246, 248, 250); border-radius: 3px; word-break: normal;">addlistener(g, <span class="pl-s" style="box-sizing: border-box; color: rgb(3, 47, 98);"><span class="pl-pds" style="box-sizing: border-box; color: rgb(3, 47, 98);">'</span>captureStop<span class="pl-pds" style="box-sizing: border-box; color: rgb(3, 47, 98);">'</span></span>, @(src,evt)disp(<span class="pl-s" style="box-sizing: border-box; color: rgb(3, 47, 98);"><span class="pl-pds" style="box-sizing: border-box; color: rgb(3, 47, 98);">'</span>capture done.<span class="pl-pds" style="box-sizing: border-box; color: rgb(3, 47, 98);">'</span></span>))</pre>
+    </div>
+    <p style="box-sizing: border-box; margin-top: 0px; margin-bottom:
+      16px; color: rgb(36, 41, 46); font-family: -apple-system,
+      BlinkMacSystemFont, &quot;Segoe UI&quot;, Helvetica, Arial,
+      sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI
+      Emoji&quot;, &quot;Segoe UI Symbol&quot;; font-size: 16px;
+      font-style: normal; font-variant-ligatures: normal;
+      font-variant-caps: normal; font-weight: 400; letter-spacing:
+      normal; orphans: 2; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; widows: 2;
+      word-spacing: 0px; -webkit-text-stroke-width: 0px;
+      background-color: rgb(255, 255, 255); text-decoration-style:
+      initial; text-decoration-color: initial;">Known actions are:
+      captureStart, captureStop, idle and busy.</p>
+    <h2 style="box-sizing: border-box; margin-top: 24px; margin-bottom:
+      16px; font-weight: 600; font-size: 1.5em; line-height: 1.25;
+      padding-bottom: 0.3em; border-bottom: 1px solid rgb(234, 236,
+      239); color: rgb(36, 41, 46); font-family: -apple-system,
+      BlinkMacSystemFont, &quot;Segoe UI&quot;, Helvetica, Arial,
+      sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI
+      Emoji&quot;, &quot;Segoe UI Symbol&quot;; font-style: normal;
+      font-variant-ligatures: normal; font-variant-caps: normal;
+      letter-spacing: normal; orphans: 2; text-align: start;
+      text-indent: 0px; text-transform: none; white-space: normal;
+      widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px;
+      background-color: rgb(255, 255, 255); text-decoration-style:
+      initial; text-decoration-color: initial;"><a
+        id="user-content-methods" class="anchor" aria-hidden="true"
+        href="https://github.com/farhi/matlab-gphoto#methods"
+        style="box-sizing: border-box; background-color: initial; color:
+        rgb(3, 102, 214); text-decoration: none; float: left;
+        padding-right: 4px; margin-left: -20px; line-height: 1;"><svg
+          class="octicon octicon-link" viewBox="0 0 16 16" version="1.1"
+          width="16" height="16" aria-hidden="true"><path
+            fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3
+            4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2
+            3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98
+            0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12
+            13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64
+            1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9
+            13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Methods</h2>
+    <ul style="box-sizing: border-box; padding-left: 2em; margin-top:
+      0px; margin-bottom: 16px; color: rgb(36, 41, 46); font-family:
+      -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;,
+      Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;,
+      &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;;
+      font-size: 16px; font-style: normal; font-variant-ligatures:
+      normal; font-variant-caps: normal; font-weight: 400;
+      letter-spacing: normal; orphans: 2; text-align: start;
+      text-indent: 0px; text-transform: none; white-space: normal;
+      widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px;
+      background-color: rgb(255, 255, 255); text-decoration-style:
+      initial; text-decoration-color: initial;">
+      <li style="box-sizing: border-box;">about display a dialog box
+        showing settings.</li>
+      <li style="box-sizing: border-box; margin-top: 0.25em;">cd change
+        or get current directory where images are stored.</li>
+      <li style="box-sizing: border-box; margin-top: 0.25em;">char
+        returns a character representation of the object</li>
+      <li style="box-sizing: border-box; margin-top: 0.25em;">continuous
+        set/toggle continuous shooting (timelapse).</li>
+      <li style="box-sizing: border-box; margin-top: 0.25em;">delete
+        close the Gphoto connection.</li>
+      <li style="box-sizing: border-box; margin-top: 0.25em;">disp
+        display GPhoto object (details)</li>
+      <li style="box-sizing: border-box; margin-top: 0.25em;">display
+        display GPhoto object (from command line)</li>
+      <li style="box-sizing: border-box; margin-top: 0.25em;">get get
+        the camera configuration.</li>
+      <li style="box-sizing: border-box; margin-top: 0.25em;">grid
+        set/toggle line markers and focus quality on plot.</li>
+      <li style="box-sizing: border-box; margin-top: 0.25em;">identify
+        identify the connected camera</li>
+      <li style="box-sizing: border-box; margin-top: 0.25em;">image
+        capture an image with current camera settings.</li>
+      <li style="box-sizing: border-box; margin-top: 0.25em;">ishold get
+        the camera status (IDLE, BUSY).</li>
+      <li style="box-sizing: border-box; margin-top: 0.25em;">plot plot
+        the camera interface, liveview and captured images.</li>
+      <li style="box-sizing: border-box; margin-top: 0.25em;">period
+        set/get plot update periodicity, in seconds.</li>
+      <li style="box-sizing: border-box; margin-top: 0.25em;">preview
+        capture a preview (small) image with current camera settings.</li>
+      <li style="box-sizing: border-box; margin-top: 0.25em;">set set a
+        configuration value.</li>
+      <li style="box-sizing: border-box; margin-top: 0.25em;">start
+        start the background gphoto control.</li>
+      <li style="box-sizing: border-box; margin-top: 0.25em;">stop stop
+        the background gphoto control. Restart it with start.</li>
+    </ul>
+    <h2 style="box-sizing: border-box; margin-top: 24px; margin-bottom:
+      16px; font-weight: 600; font-size: 1.5em; line-height: 1.25;
+      padding-bottom: 0.3em; border-bottom: 1px solid rgb(234, 236,
+      239); color: rgb(36, 41, 46); font-family: -apple-system,
+      BlinkMacSystemFont, &quot;Segoe UI&quot;, Helvetica, Arial,
+      sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI
+      Emoji&quot;, &quot;Segoe UI Symbol&quot;; font-style: normal;
+      font-variant-ligatures: normal; font-variant-caps: normal;
+      letter-spacing: normal; orphans: 2; text-align: start;
+      text-indent: 0px; text-transform: none; white-space: normal;
+      widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px;
+      background-color: rgb(255, 255, 255); text-decoration-style:
+      initial; text-decoration-color: initial;"><a
+        id="user-content-installation" class="anchor" aria-hidden="true"
+        href="https://github.com/farhi/matlab-gphoto#installation"
+        style="box-sizing: border-box; background-color: initial; color:
+        rgb(3, 102, 214); text-decoration: none; float: left;
+        padding-right: 4px; margin-left: -20px; line-height: 1;"><svg
+          class="octicon octicon-link" viewBox="0 0 16 16" version="1.1"
+          width="16" height="16" aria-hidden="true"><path
+            fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3
+            4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2
+            3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98
+            0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12
+            13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64
+            1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9
+            13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Installation</h2>
+    <p style="box-sizing: border-box; margin-top: 0px; margin-bottom:
+      16px; color: rgb(36, 41, 46); font-family: -apple-system,
+      BlinkMacSystemFont, &quot;Segoe UI&quot;, Helvetica, Arial,
+      sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI
+      Emoji&quot;, &quot;Segoe UI Symbol&quot;; font-size: 16px;
+      font-style: normal; font-variant-ligatures: normal;
+      font-variant-caps: normal; font-weight: 400; letter-spacing:
+      normal; orphans: 2; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; widows: 2;
+      word-spacing: 0px; -webkit-text-stroke-width: 0px;
+      background-color: rgb(255, 255, 255); text-decoration-style:
+      initial; text-decoration-color: initial;">You should first install<span>&nbsp;</span><a
+        href="http://www.gphoto.org/" title="gPhoto" rel="nofollow"
+        style="box-sizing: border-box; background-color: initial; color:
+        rgb(3, 102, 214); text-decoration: none;">gPhoto2</a>. It exists
+      as pre-built packages for Debian and RedHat type Linux systems,
+      e.g.:</p>
+    <pre style="box-sizing: border-box; font-family: SFMono-Regular, Consolas, &quot;Liberation Mono&quot;, Menlo, monospace; font-size: 13.6px; margin-top: 0px; margin-bottom: 16px; overflow-wrap: normal; padding: 16px; overflow: auto; line-height: 1.45; background-color: rgb(246, 248, 250); border-radius: 3px; color: rgb(36, 41, 46); font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-style: initial; text-decoration-color: initial;"><code style="box-sizing: border-box; font-family: SFMono-Regular, Consolas, &quot;Liberation Mono&quot;, Menlo, monospace; font-size: 13.6px; padding: 0px; margin: 0px; background: initial; border-radius: 3px; word-break: normal; white-space: pre; border: 0px; display: inline; overflow: visible; line-height: inherit; overflow-wrap: normal;">sudo apt install gphoto2
+</code></pre>
+    <p style="box-sizing: border-box; margin-top: 0px; margin-bottom:
+      16px; color: rgb(36, 41, 46); font-family: -apple-system,
+      BlinkMacSystemFont, &quot;Segoe UI&quot;, Helvetica, Arial,
+      sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI
+      Emoji&quot;, &quot;Segoe UI Symbol&quot;; font-size: 16px;
+      font-style: normal; font-variant-ligatures: normal;
+      font-variant-caps: normal; font-weight: 400; letter-spacing:
+      normal; orphans: 2; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; widows: 2;
+      word-spacing: 0px; -webkit-text-stroke-width: 0px;
+      background-color: rgb(255, 255, 255); text-decoration-style:
+      initial; text-decoration-color: initial;">Then, extract the
+      project archive, which should contain a @gphoto and @process
+      directories. Then, add its path into Matlab:</p>
+    <div class="highlight highlight-source-matlab" style="box-sizing:
+      border-box; margin-bottom: 16px; color: rgb(36, 41, 46);
+      font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe
+      UI&quot;, Helvetica, Arial, sans-serif, &quot;Apple Color
+      Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI
+      Symbol&quot;; font-size: 16px; font-style: normal;
+      font-variant-ligatures: normal; font-variant-caps: normal;
+      font-weight: 400; letter-spacing: normal; orphans: 2; text-align:
+      start; text-indent: 0px; text-transform: none; white-space:
+      normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width:
+      0px; background-color: rgb(255, 255, 255); text-decoration-style:
+      initial; text-decoration-color: initial;">
+      <pre style="box-sizing: border-box; font-family: SFMono-Regular, Consolas, &quot;Liberation Mono&quot;, Menlo, monospace; font-size: 13.6px; margin-top: 0px; margin-bottom: 0px; overflow-wrap: normal; padding: 16px; overflow: auto; line-height: 1.45; background-color: rgb(246, 248, 250); border-radius: 3px; word-break: normal;"><span class="pl-s" style="box-sizing: border-box; color: rgb(3, 47, 98);"><span class="pl-smi" style="box-sizing: border-box; color: rgb(36, 41, 46);">addpath</span> /path/to/gphoto</span></pre>
+    </div>
+    <p style="box-sizing: border-box; margin-top: 0px; margin-bottom:
+      16px; color: rgb(36, 41, 46); font-family: -apple-system,
+      BlinkMacSystemFont, &quot;Segoe UI&quot;, Helvetica, Arial,
+      sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI
+      Emoji&quot;, &quot;Segoe UI Symbol&quot;; font-size: 16px;
+      font-style: normal; font-variant-ligatures: normal;
+      font-variant-caps: normal; font-weight: 400; letter-spacing:
+      normal; orphans: 2; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; widows: 2;
+      word-spacing: 0px; -webkit-text-stroke-width: 0px;
+      background-color: rgb(255, 255, 255); text-decoration-style:
+      initial; text-decoration-color: initial;">Connect your camera to
+      the computer using e.g. a USB cable.</p>
+    <p style="box-sizing: border-box; margin-top: 0px; margin-bottom:
+      0px !important; color: rgb(36, 41, 46); font-family:
+      -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;,
+      Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;,
+      &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;;
+      font-size: 16px; font-style: normal; font-variant-ligatures:
+      normal; font-variant-caps: normal; font-weight: 400;
+      letter-spacing: normal; orphans: 2; text-align: start;
+      text-indent: 0px; text-transform: none; white-space: normal;
+      widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px;
+      background-color: rgb(255, 255, 255); text-decoration-style:
+      initial; text-decoration-color: initial;">(c) E. Farhi, GPL2,
+      2019.</p>
+  </body>
+</html>
