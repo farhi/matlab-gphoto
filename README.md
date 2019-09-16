@@ -26,12 +26,12 @@ Then images are read from the gphoto/Images directory by default.
 
 The Plot Window
 ---------------
-[The gPhoto Plot window](@gphoto/doc/gphoto_plot.png)
-[The gPhoto Settings dialogue](@gphoto/doc/gphoto_settings.png)
+![The gPhoto Plot window](@gphoto/doc/gphoto_plot.png)
+![The gPhoto Settings dialogue](@gphoto/doc/gphoto_settings.png)
 The 'plot' method displays the current camera livewview, at a low refresh rate.
 The menus allow to:
-- cpature an image
-- start/stop a continuous shooting (timelapse)
+- capture an image
+- start/stop a continuous capture (timelapse)
 - change settings
 - change storage directory and liveview refresh rate
 - display an X mark and focus quality indicator.
