@@ -1,8 +1,9 @@
 classdef gphoto < handle
-  % GPHOTO A class to control DSLR camera handled by gPhoto
+  % GPHOTO A class to control DSLR camera handled by gPhoto.
+  % ========================================================
   %
   % Usage
-  % =====
+  % -----
   % This class can currently connect to a single DSLR camera via USB cable and GPhoto2.
   % Basically, type from Matlab:
   % - addpath /path/to/gphoto
@@ -12,14 +13,17 @@ classdef gphoto < handle
   % - get(g);               % display all settings
   % - set(g, 'iso', 3200);  % set the ISO
   %
+  % You may as well specify a port used for the connection, e.g.:
+  % - g=gphoto('usb:002,004');
+  %
   % You may as well try the simulator mode, which does not require gPhoto, 
-  % nor a camera:
+  % nor a camera. Then, images are read from the gphoto/Images directory by default.
   % - g = gphoto('sim');
   %
   % Then images are read from the gphoto/Images directory by default.
   %
   % The Plot Window
-  % ===============
+  % ---------------
   % The 'plot' method displays the current camera livewview, at a low refresh rate.
   % The menus allow to:
   % - cpature an image
@@ -28,12 +32,31 @@ classdef gphoto < handle
   % - change storage directory and liveview refresh rate
   % - display an X mark and focus quality indicator.
   %
-  % Installation
-  % ============
-  % Get the project archive, which should contain a @gphoto and @process directories.
+  % Time-lapse/continuous capture
+  % -----------------------------
+  % The 'continuous' method and the similar menu item in the plot window allow
+  % to start/stop a periodic capture. The current camera settings are used.
+  % When the livewview refresh rate is smaller than the acquisition shutter time
+  % the images are capture as soon as possible, with minimal waitings. 
+  % - period(g, 0.5);
+  % - continuous(g,'on'); % start time-lapse, capture asap (0.5 s).
+  % - ...
+  % - continuous(g, 'off');
+  % 
+  % When the refresh rate is larger than the shutter time, the next image is 
+  % captured is synchronized with it.
+  % - period(g, 15);
+  % - continuous(g,'on'); % start time-lapse, capture every 15 seconds.
+  %
+  % Trigger action on event
+  % -----------------------
+  % You may attach an action to a specific gPhoto event, e.g.:
+  % - addlistener(g, 'captureStop', @(src,evt)disp('capture done.'))
+  %
+  % Known actions are: captureStart, captureStop, idle and busy.
   %
   % Methods
-  % =======
+  % -------
   % - about       display a dialog box showing settings.
   % - cd          change or get current directory where images are stored. 
   % - char        returns a character representation of the object
@@ -52,6 +75,18 @@ classdef gphoto < handle
   % - set         set a configuration value.
   % - start       start the background gphoto control.
   % - stop        stop the background gphoto control. Restart it with start.
+  %
+  % Installation
+  % ------------
+  % You should first install [gPhoto2](http://www.gphoto.org/ "gPhoto"). It exists
+  % as pre-built packages for Debian and RedHat type Linux systems, e.g.:
+  % - sudo apt install gphoto2
+  %
+  % Then, extract the project archive, which should contain a @gphoto and @process 
+  % directories. Then, add its path into Matlab:
+  % - addpath /path/to/gphoto
+  %
+  % Connect your camera to the computer using e.g. a USB cable.
   %
   % (c) E. Farhi, GPL2, 2019.
 
@@ -381,11 +416,14 @@ classdef gphoto < handle
       %     period(s, 10) 
       %   will take an image every 10s.
       if nargin == 1, st = ''; end
+      if isnumeric(st) && isscalar(st)
+        if st, st='on'; else st='off'; end
+      end
       if ischar(st)
         switch lower(st)
-        case 'on'
+        case {'on','start'}
           self.shoot_endless = true;
-        case 'off'
+        case {'off','stop'}
           self.shoot_endless = false;
         case {'','toggle'}
           self.shoot_endless = ~self.shoot_endless;
