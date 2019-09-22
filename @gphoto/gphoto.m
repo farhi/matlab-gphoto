@@ -137,6 +137,21 @@ classdef gphoto < handle
       %   'ptpip:XX.YY.ZZ.TT'   PTP over IP
       %   'serial:/dev/ttyXX'   serial port
       %   'sim'                 simulation mode
+      
+      persistent checkstart
+      if isempty(checkstart)
+        checkstart = false;
+        try
+          p = process;
+          if isa(p, 'process') % must be a class
+            checkstart = true;
+          end
+        end
+        if ~checkstart
+          d = fileparts(fileparts(which(mfilename))); % dir above class
+          addpath(fullfile(d,'matlab-process'));
+        end
+      end
 
       if nargin && ischar(varargin{1})
         self.port = varargin{1};
@@ -372,8 +387,9 @@ classdef gphoto < handle
       
       if strncmp(self.port, 'sim', 3)
         dt0 = get(self.proc, 'period');
-      else
+      elseif isa(self.proc,'process')
         dt0 = period(self.proc);
+      else dt0 = inf;
       end
       if ~isempty(varargin) && ischar(varargin{1}) && strcmp(varargin{1}, 'gui')
         dt = inputdlg('Specify preview/continuous rate [s]. Use Inf or 0 to disable liveview.', ...
@@ -397,7 +413,7 @@ classdef gphoto < handle
       elseif 1 < dt && dt0 < 1
         if strncmp(self.port, 'sim', 3)
           set(self.proc, 'Period', 1);
-        else
+        elseif isa(self.proc,'process')
           period(self.proc, 1); % keep 1s reresh rate for external gphoto shell
         end
       end
