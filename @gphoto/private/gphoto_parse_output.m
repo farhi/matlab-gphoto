@@ -55,32 +55,41 @@ function gphoto_config = gphoto_parse_output(self, message, config)
       n     = t{block_start};
       [r,n] = fileparts(n); n(~isstrprop(n, 'alphanum')) = '_';
       if ~isvarname(n), n= genvarname(n); end
-      config{index} = n;
     end
     
     % block fields (as cell)
     block = t(block_start:block_end);
     % get only lines with ':' (remove END and any other parasitic output)
     block = block(~cellfun(@isempty, strfind(block, ':')));
-    block = str2struct(block);
-    block.name = n;
+    
+    try
+      block = str2struct(block);
+    catch
+      b= block; block=[]; block.Current = b;
+    end
+    block.name = genvarname(n);
     gphoto_config{end+1} = block;
   end
   
   % create structure when relevant
+  s = [];
   if numel(gphoto_config) == numel(config)
     try
-      gphoto_config = cell2struct(gphoto_config, config, 2);
-    catch
-      s = struct();
-      for index=1:numel(gphoto_config)
-        if ~isempty(gphoto_config{index}.name) && ~isfield(s, gphoto_config{index}.name)
-          s.(gphoto_config{index}.name) = gphoto_config{index};
-        end
-      end
-      gphoto_config = s;
+      s = cell2struct(gphoto_config, config, 2);
     end
   end
+  if isempty(s)
+    for index=1:numel(gphoto_config)
+      if ~isempty(gphoto_config{index}.name) 
+        if ~isfield(s, gphoto_config{index}.name)
+          s.(gphoto_config{index}.name) = gphoto_config{index};
+        else
+          s.(gphoto_config{index}.name) = cat(s.(gphoto_config{index}.name), gphoto_config{index});
+        end
+      end
+    end
+  end
+  gphoto_config = s;
 
 % ----------------------------------------------------------------------------
 function files = gphoto_parse_capture(self, t)
