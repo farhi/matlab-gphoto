@@ -336,14 +336,16 @@ classdef gphoto < handle
         % register a post_image (to get image names)
         self.expect{end+1} = {'post_image', self};
       else % simulate: we generate an image file
-        % simluation mode: we generate a preview image
+        % simulation mode: we generate a preview image
+        notify(self, 'captureStart');
         d = dir(self.dir);
         index = [ d.isdir ];
         index = find(~index);
         r = ceil(rand*numel(index));
-        self.lastImageFile = d(index(r)).name;
+        self.lastImageFile = cellstr(d(index(r)).name);
         self.lastImageDate = clock;
-        if self.verbose, disp([ '[' datestr(now) '] ' fullfile(self.dir, self.lastImageFile)]); end
+        notify(self, 'captureStop');
+        if self.verbose, disp([ '[' datestr(now) '] ' fullfile(self.dir, char(self.lastImageFile))]); end
       end
       
     end % image
