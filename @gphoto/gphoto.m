@@ -192,7 +192,9 @@ classdef gphoto < handle
       try
         gphoto_getall(self);
       catch
-        error([ mfilename ': ERROR: the camera can not be found on port ' self.port ]);
+        disp([ mfilename ': ERROR: the camera can not be found on port ' self.port ]);
+        disp('*** Switching to simulate mode.');
+        self = gphoto(self, 'sim');
       end
       
     end % gphoto instantiate
