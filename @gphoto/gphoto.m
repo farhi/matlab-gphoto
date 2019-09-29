@@ -150,6 +150,12 @@ classdef gphoto < handle
         if ~checkstart
           d = fileparts(fileparts(which(mfilename))); % dir above class
           addpath(fullfile(d,'matlab-process'));
+          if ~exist('process')
+            disp([ mfilename ': WARNING: "process" can not be found.' ])
+            disp('*** Use "git submodule init", then "git submodule update" to import it.');
+            disp('    Using simulation mode')
+            self.port='sim';
+          end
         end
       end
 
