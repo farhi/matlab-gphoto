@@ -67,6 +67,7 @@ classdef gphoto < handle
   % - disp        display GPhoto object (details)
   % - display     display GPhoto object (from command line)
   % - get         get the camera configuration.
+  % - get_state   get the camera state.
   % - grid        set/toggle line markers and focus quality on plot.
   % - identify    identify the connected camera
   % - image       capture an image with current camera settings.
@@ -326,6 +327,11 @@ classdef gphoto < handle
         end
       end
     end % get
+    
+    function st = get_state(self)
+      % GET_STATE Return the camera state, e.g. BUSY, IDLE.
+      st = self.status;
+    end % get_state
 
     function image(self)
       % IMAGE capture an image with current camera settings
