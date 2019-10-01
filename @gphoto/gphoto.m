@@ -195,7 +195,7 @@ classdef gphoto < handle
       catch
         disp([ mfilename ': ERROR: the camera can not be found on port ' self.port ]);
         disp('*** Switching to simulate mode.');
-        self = gphoto(self, 'sim');
+        self = gphoto('sim');
       end
       
     end % gphoto instantiate
@@ -574,7 +574,7 @@ function CameraWatchFcn(self)
 
   if ~ishold(self) % 'IDLE'
     % when an action has been registered, we execute it, but only one at a time
-    if ~isempty(self.expect)
+    if ~isempty(self.expect) && iscell(self.expect)
       this = self.expect{1};
       feval(this{:}); % expand callback for action
       self.expect(1) = [];
