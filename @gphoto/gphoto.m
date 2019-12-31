@@ -28,7 +28,7 @@ classdef gphoto < handle
   % ---------------
   % The 'plot' method displays the current camera livewview, at a low refresh rate.
   % The menus allow to:
-  % - cpature an image
+  % - capture an image
   % - start/stop a continuous shooting (timelapse)
   % - change settings
   % - change storage directory and liveview refresh rate
@@ -61,15 +61,16 @@ classdef gphoto < handle
   % -------
   % - about       display a dialog box showing settings.
   % - cd          change or get current directory where images are stored. 
-  % - char        returns a character representation of the object
+  % - capture     same as 'image', e.g. shoot an image.
+  % - char        returns a character representation of the object.
   % - continuous  set/toggle continuous shooting (timelapse).
   % - delete      close the Gphoto connection.
-  % - disp        display GPhoto object (details)
-  % - display     display GPhoto object (from command line)
+  % - disp        display GPhoto object (details).
+  % - display     display GPhoto object (from command line).
   % - get         get the camera configuration.
   % - get_state   get the camera state.
   % - grid        set/toggle line markers and focus quality on plot.
-  % - identify    identify the connected camera
+  % - identify    identify the connected camera.
   % - image       capture an image with current camera settings.
   % - ishold      get the camera status (IDLE, BUSY).
   % - plot        plot the camera interface, liveview and captured images.
