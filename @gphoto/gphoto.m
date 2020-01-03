@@ -360,7 +360,7 @@ classdef gphoto < handle
         self.lastImageFile = cellstr(d(index(r)).name);
         self.lastImageDate = clock;
         notify(self, 'captureStop');
-        if self.verbose, disp([ '[' datestr(now) '] ' fullfile(self.dir, char(self.lastImageFile))]); end
+        if self.verbose, disp([ '[' datestr(now) '] ' mfilename ': ' fullfile(self.dir, char(self.lastImageFile))]); end
       end
       
     end % image
@@ -697,7 +697,7 @@ function post_image(self)
   if ~isempty(index)
     self.lastImageFile = files(index);
     self.lastImageDate = clock;
-    if self.verbose, disp([ '[' datestr(now) '] ' fullfile(self.dir, self.lastImageFile{1})]); end
+    if self.verbose, disp([ '[' datestr(now) '] ' mfilename ': ' fullfile(self.dir, self.lastImageFile{1})]); end
   end
 end % post_image
 
