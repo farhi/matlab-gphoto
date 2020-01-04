@@ -187,7 +187,7 @@ classdef gphoto < handle
           fprintf(1, '%-30s %s\n', cameras{index}, ports{index});  
         end
         if ~nargin && numel(cameras) > 1
-          error([ mfilename ': there are more than one camera connected. Specify the port.' ])
+          error([ '[' datestr(now) ']: ' mfilename  ': there are more than one camera connected. Specify the port.' ])
         end
       end
       
@@ -291,7 +291,7 @@ classdef gphoto < handle
         end
       end
       self.version = id;
-      if ~isempty(id) disp([ mfilename ': connected to ' id ]); end
+      if ~isempty(id) disp([ '[' datestr(now) ']: ' mfilename  ': connected to ' id ]); end
     end % identify
     
     function get(self, config)
@@ -482,10 +482,10 @@ classdef gphoto < handle
       end
       h = findall(0, 'Tag', [ mfilename '_continuous' ]);
       if self.shoot_endless
-        disp([ mfilename ': continuous shooting: ON' ]);
+        disp([ '[' datestr(now) ']: ' mfilename  ': continuous shooting: ON' ]);
         if ~isempty(h), set(h, 'Checked','on'); end
       else
-        disp([ mfilename ': continuous shooting: OFF' ]);
+        disp([ '[' datestr(now) ']: ' mfilename  ': continuous shooting: OFF' ]);
         if ~isempty(h), set(h, 'Checked','off'); end
       end
     end % continuous
@@ -630,10 +630,12 @@ function CameraWatchFcn(self)
       if numel(self.focus_history) > 100
         self.focus_history = self.focus_history((end-99):end);
       end
-      title(self.image_axes, ...
-        [ '[' datestr(clock) '] ' imName ], ...
-        'interpreter','none','FontWeight','bold');
-      xlabel(self.image_axes, self.dir); ylabel(self.image_axes, ' '); zlabel(self.image_axes, ' ');
+      try
+        title(self.image_axes, ...
+          [ '[' datestr(clock) '] ' imName ], ...
+          'interpreter','none','FontWeight','bold');
+        xlabel(self.image_axes, self.dir); ylabel(self.image_axes, ' '); zlabel(self.image_axes, ' ');
+      end
 
       % show X marker and focus history
       if self.show_lines
@@ -689,7 +691,7 @@ function post_get(self, config)
     value = value{1};
   end
   self.settings.(config) = value;
-  disp([ mfilename ': ' config ]);
+  disp([ '[' datestr(now) ']: ' mfilename  ': ' config ]);
   ans = value
   
 end % post_get
