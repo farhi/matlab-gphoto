@@ -57,6 +57,11 @@ classdef gphoto < handle
   %
   % Known actions are: captureStart, captureStop, idle and busy.
   %
+  % For instance, for astrophotography you may automatically annotate new images:
+  %  - install https://github.com/farhi/matlab-astrometry
+  %  - addlistener(g, 'captureStop', ...
+  %    @(src,evt)astrometry(g.lastImageFile, 'scale-low', 0.5, 'scale-high',2,'autoplot'))
+  %
   % Methods
   % -------
   % - about       display a dialog box showing settings.
@@ -357,10 +362,11 @@ classdef gphoto < handle
         index = [ d.isdir ];
         index = find(~index);
         r = ceil(rand*numel(index));
-        self.lastImageFile = cellstr(d(index(r)).name);
+        self.lastImageFile = cellstr(fullfile(self.dir, d(index(r)).name));
         self.lastImageDate = clock;
         notify(self, 'captureStop');
-        if self.verbose, disp([ '[' datestr(now) '] ' mfilename ': ' fullfile(self.dir, char(self.lastImageFile))]); end
+        CameraWatchFcn(self);
+        if self.verbose, disp([ '[' datestr(now) '] ' mfilename ': ' char(self.lastImageFile) ]); end
       end
       
     end % image
@@ -390,7 +396,7 @@ classdef gphoto < handle
         index = [ d.isdir ];
         index = find(~index);
         r = ceil(rand*numel(index));
-        self.lastPreviewFile = d(index(r)).name;
+        self.lastPreviewFile = fullfile(self.dir, d(index(r)).name);
         self.lastPreviewDate = clock;
       end
       
@@ -602,7 +608,7 @@ function CameraWatchFcn(self)
     % check if an image can be read
     
     for index = 1:numel(file)
-      try; imRGB = imread(fullfile(self.dir, file{index})); imName=file{index}; break; end
+      try; imRGB = imread(file{index}); imName=file{index}; break; end
     end
   end
   if ~isempty(imRGB)
@@ -656,13 +662,18 @@ function CameraWatchFcn(self)
     if self.shoot_endless
       image(self);
     elseif (~ispreview || ...
-      (isempty(self.lastImageDate) || etime(self.lastPreviewDate,self.lastImageDate) > 5))
+      (isempty(self.lastImageDate) || etime(self.lastPreviewDate,self.lastImageDate) > 5)) ...
+      && ~strncmp(self.port, 'sim', 3)
       preview(self);
     end
-    set(self.image_axes,'XColor','k','YColor','k');
+    try
+      set(self.image_axes,'XColor','k','YColor','k');
+    end
   else
     % set axes borders to red when BUSY
-    set(self.image_axes,'XColor','r','YColor','r');
+    try
+      set(self.image_axes,'XColor','r','YColor','r');
+    end
   end
 end % CameraWatchFcn
 
@@ -695,9 +706,9 @@ function post_image(self)
   end
   index = find(~strcmp('capture_preview.jpg', files)); % not preview
   if ~isempty(index)
-    self.lastImageFile = files(index);
+    self.lastImageFile = fullfile(self.dir, files(index));
     self.lastImageDate = clock;
-    if self.verbose, disp([ '[' datestr(now) '] ' mfilename ': ' fullfile(self.dir, self.lastImageFile{1})]); end
+    if self.verbose, disp([ '[' datestr(now) '] ' mfilename ': ' self.lastImageFile{1} ]); end
   end
 end % post_image
 

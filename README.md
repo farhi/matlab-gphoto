@@ -73,6 +73,11 @@ addlistener(g, 'captureStop', @(src,evt)disp('capture done.'))
 
 Known actions are: captureStart, captureStop, idle and busy.
 
+For instance, for astrophotography you may automatically annotate new images:
+  - install https://github.com/farhi/matlab-astrometry
+  - addlistener(g, 'captureStop', ...
+    @(src,evt)astrometry(g.lastImageFile, 'scale-low', 0.5, 'scale-high',2,'autoplot'))
+
 Methods
 -------
 - about       display a dialog box showing settings.

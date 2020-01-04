@@ -3,7 +3,7 @@
   <head>
     <meta content="text/html; charset=windows-1252"
       http-equiv="content-type">
-    <title>Empty Web Page</title>
+    <title>matlab-gphoto</title>
   </head>
   <body>
     <meta http-equiv="content-type" content="text/html;
@@ -54,6 +54,8 @@ href="https://github.com/farhi/matlab-gphoto#gphoto-a-class-to-control-dslr-came
             13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64
             1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9
             13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>GPHOTO
+
+
       A class to control DSLR camera handled by gPhoto.</h1>
     <p style="box-sizing: border-box; margin-top: 0px; margin-bottom:
       16px; color: rgb(36, 41, 46); font-family: -apple-system,
@@ -74,7 +76,7 @@ href="https://github.com/farhi/matlab-gphoto/blob/master/@gphoto/doc/gphoto_plot
           src="gphoto_plot.png" alt="The gPhoto Plot window"
           title="plot(g)" style="box-sizing: initial; border-style:
           none; max-width: 100%; background-color: rgb(255, 255, 255);"
-          border="0" align="right" height="368" width="307"></a></p>
+          height="368" width="307" align="right" border="0"></a></p>
     <h2 style="box-sizing: border-box; margin-top: 24px; margin-bottom:
       16px; font-weight: 600; font-size: 1.5em; line-height: 1.25;
       padding-bottom: 0.3em; border-bottom: 1px solid rgb(234, 236,
@@ -289,7 +291,7 @@ href="https://github.com/farhi/matlab-gphoto/blob/master/@gphoto/doc/gphoto_sett
           src="gphoto_settings.png" alt="The gPhoto Settings dialogue"
           title="set(g)" style="box-sizing: initial; border-style: none;
           max-width: 100%; background-color: rgb(255, 255, 255);"
-          border="0" align="right" height="372" width="242"></a></p>
+          height="372" width="242" align="right" border="0"></a></p>
     <h2 style="box-sizing: border-box; margin-top: 24px; margin-bottom:
       16px; font-weight: 600; font-size: 1.5em; line-height: 1.25;
       padding-bottom: 0.3em; border-bottom: 1px solid rgb(234, 236,
@@ -318,6 +320,8 @@ href="https://github.com/farhi/matlab-gphoto#time-lapsecontinuous-capture"
             13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64
             1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9
             13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Time-lapse/continuous
+
+
       capture</h2>
     <p style="box-sizing: border-box; margin-top: 0px; margin-bottom:
       16px; color: rgb(36, 41, 46); font-family: -apple-system,
@@ -410,6 +414,8 @@ continuous(g,<span class="pl-s" style="box-sizing: border-box; color: rgb(3, 47,
             13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64
             1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9
             13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Trigger
+
+
       action on event</h2>
     <p style="box-sizing: border-box; margin-top: 0px; margin-bottom:
       16px; color: rgb(36, 41, 46); font-family: -apple-system,
@@ -450,7 +456,28 @@ continuous(g,<span class="pl-s" style="box-sizing: border-box; color: rgb(3, 47,
       word-spacing: 0px; -webkit-text-stroke-width: 0px;
       background-color: rgb(255, 255, 255); text-decoration-style:
       initial; text-decoration-color: initial;">Known actions are:
-      captureStart, captureStop, idle and busy.</p>
+      captureStart, captureStop, idle and busy.<br>
+    </p>
+    <p style="box-sizing: border-box; margin-top: 0px; margin-bottom:
+      16px; color: rgb(36, 41, 46); font-family: -apple-system,
+      BlinkMacSystemFont, &quot;Segoe UI&quot;, Helvetica, Arial,
+      sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI
+      Emoji&quot;, &quot;Segoe UI Symbol&quot;; font-size: 16px;
+      font-style: normal; font-variant-ligatures: normal;
+      font-variant-caps: normal; font-weight: 400; letter-spacing:
+      normal; orphans: 2; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; widows: 2;
+      word-spacing: 0px; -webkit-text-stroke-width: 0px;
+      background-color: rgb(255, 255, 255); text-decoration-style:
+      initial; text-decoration-color: initial;">For instance, for
+      astrophotography you may automatically annotate new images:<br>
+    </p>
+    <ol>
+      <li>install https://github.com/farhi/matlab-astrometry</li>
+      <li>addlistener(g, 'captureStop',
+        @(src,evt)astrometry(g.lastImageFile, 'scale-low', 0.5,
+        'scale-high',2,'autoplot'))</li>
+    </ol>
     <h2 style="box-sizing: border-box; margin-top: 24px; margin-bottom:
       16px; font-weight: 600; font-size: 1.5em; line-height: 1.25;
       padding-bottom: 0.3em; border-bottom: 1px solid rgb(234, 236,
