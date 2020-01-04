@@ -56,6 +56,7 @@ href="https://github.com/farhi/matlab-gphoto#gphoto-a-class-to-control-dslr-came
             13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>GPHOTO
 
 
+
       A class to control DSLR camera handled by gPhoto.</h1>
     <p style="box-sizing: border-box; margin-top: 0px; margin-bottom:
       16px; color: rgb(36, 41, 46); font-family: -apple-system,
@@ -322,6 +323,7 @@ href="https://github.com/farhi/matlab-gphoto#time-lapsecontinuous-capture"
             13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Time-lapse/continuous
 
 
+
       capture</h2>
     <p style="box-sizing: border-box; margin-top: 0px; margin-bottom:
       16px; color: rgb(36, 41, 46); font-family: -apple-system,
@@ -416,6 +418,7 @@ continuous(g,<span class="pl-s" style="box-sizing: border-box; color: rgb(3, 47,
             13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Trigger
 
 
+
       action on event</h2>
     <p style="box-sizing: border-box; margin-top: 0px; margin-bottom:
       16px; color: rgb(36, 41, 46); font-family: -apple-system,
@@ -474,9 +477,10 @@ continuous(g,<span class="pl-s" style="box-sizing: border-box; color: rgb(3, 47,
     </p>
     <ol>
       <li>install https://github.com/farhi/matlab-astrometry</li>
-      <li>addlistener(g, 'captureStop',
-        @(src,evt)astrometry(g.lastImageFile, 'scale-low', 0.5,
-        'scale-high',2,'autoplot'))</li>
+      <li>as=astrometry('null','autoplot');<br>
+      </li>
+      <li>addlistener(so, 'captureStop', @(src,evt)local(as,
+        g.lastImageFile, 'scale-low', 0.5, 'scale-high',2));</li>
     </ol>
     <h2 style="box-sizing: border-box; margin-top: 24px; margin-bottom:
       16px; font-weight: 600; font-size: 1.5em; line-height: 1.25;
