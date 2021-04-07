@@ -2,6 +2,8 @@
 GPHOTO A class to control DSLR camera handled by gPhoto.
 ========================================================
 
+:warning: This project has been moved to Gitlab at https://gitlab.com/astrophotography/matlab-gphoto . The current Github repo is stalled.
+
 ![The gPhoto Plot window](@gphoto/doc/gphoto_plot.png "plot(g)")
 
 Usage
